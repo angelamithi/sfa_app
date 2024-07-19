@@ -25,6 +25,7 @@ from routes.survey_response_bp import survey_response_bp
 from routes.volunteer_hour_bp import volunteer_hour_bp
 from routes.reports_bp import report_bp
 from routes.transcription_bp import transcription_bp
+from routes.auth_bp import auth_bp
 
 bcrypt = Bcrypt()
 
@@ -68,6 +69,7 @@ def create_app():
     app.register_blueprint(report_bp)
     app.register_blueprint(transcription_bp)
     app.register_blueprint(volunteer_hour_bp)
+    app.register_blueprint(auth_bp)
     return app
 
 

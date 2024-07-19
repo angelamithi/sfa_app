@@ -19,7 +19,7 @@ class User(db.Model):
     first_name = db.Column(db.String, nullable=False)
     last_name = db.Column(db.String, nullable=False)
     phone_number = db.Column(db.String)
-    password_hash = db.Column(db.String(128), nullable=False)
+    password= db.Column(db.String(128), nullable=False)
     role = db.Column(db.String(50), nullable=False)
     volunteer_hours = db.relationship('VolunteerHour', backref='user', lazy=True, foreign_keys='VolunteerHour.user_id')
     approved_volunteer_hours = db.relationship('VolunteerHour', backref='approved_by_user', lazy=True, foreign_keys='VolunteerHour.approved_by')

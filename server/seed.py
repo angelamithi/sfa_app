@@ -22,12 +22,12 @@ def seed_database():
        
         # Seed data for Users
         user_data = [
-            {"username": "john_doe", "email": "john.doe@example.com", "first_name": "John", "last_name": "Doe", "phone_number": "1234567890", "password_hash": "hashed_password_1", "role": "Coordinator"},
-            {"username": "winnie_bett", "email": "winnie.bett@example.com", "first_name": "Winnie", "last_name": "Bett", "phone_number": "1122334455", "password_hash": "hashed_password_3", "role": "Member"},
-            {"username": "jane_smith", "email": "jane.smith@example.com", "first_name": "Jane", "last_name": "Smith", "phone_number": "075454674", "password_hash": "hashed_password_2", "role": "Administrator"},
-            {"username": "sam_wilson", "email": "sam.wilson@example.com", "first_name": "Sam", "last_name": "Wilson", "phone_number": "1122334455", "password_hash": "hashed_password_3", "role": "Coordinator"},
-            {"username": "jean_manga", "email": "jean.manga@example.com", "first_name": "Jean", "last_name": "Manga", "phone_number": "074654321", "password_hash": "hashed_password_2", "role": "Volunteer"},
-            {"username": "amos_waru", "email": "amos.waru@example.com", "first_name": "Amos", "last_name": "Waru", "phone_number": "0785654321", "password_hash": "hashed_password_2", "role": "Volunteer"}
+            {"username": "john_doe", "email": "john.doe@example.com", "first_name": "John", "last_name": "Doe", "phone_number": "1234567890", "password": "hashed_password_1", "role": "Coordinator"},
+            {"username": "winnie_bett", "email": "winnie.bett@example.com", "first_name": "Winnie", "last_name": "Bett", "phone_number": "1122334455", "password": "hashed_password_3", "role": "Member"},
+            {"username": "jane_smith", "email": "jane.smith@example.com", "first_name": "Jane", "last_name": "Smith", "phone_number": "075454674", "password": "hashed_password_2", "role": "Administrator"},
+            {"username": "sam_wilson", "email": "sam.wilson@example.com", "first_name": "Sam", "last_name": "Wilson", "phone_number": "1122334455", "password": "hashed_password_3", "role": "Coordinator"},
+            {"username": "jean_manga", "email": "jean.manga@example.com", "first_name": "Jean", "last_name": "Manga", "phone_number": "074654321", "password": "hashed_password_2", "role": "Volunteer"},
+            {"username": "amos_waru", "email": "amos.waru@example.com", "first_name": "Amos", "last_name": "Waru", "phone_number": "0785654321", "password": "hashed_password_2", "role": "Volunteer"}
 
 
           

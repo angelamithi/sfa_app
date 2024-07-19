@@ -5,17 +5,18 @@ from flask_jwt_extended import jwt_required
 from models import User, db  
 from serializer import user_schema 
 from auth import admin_required
+from flask_bcrypt import Bcrypt
 
 user_bp = Blueprint('user_bp', __name__)
 api = Api(user_bp)
-
+bcrypt = Bcrypt()
 post_args = reqparse.RequestParser()
 post_args.add_argument('username', type=str, required=True, help='Username is required')
 post_args.add_argument('email', type=str, required=True, help='Email is required')
 post_args.add_argument('first_name', type=str, required=True, help='First Name is required')
 post_args.add_argument('last_name', type=str, required=True, help='Last Name is required')
 post_args.add_argument('phone_number', type=str)
-post_args.add_argument('password_hash', type=str, required=True, help='Password Hash is required')
+post_args.add_argument('password', type=str, required=True, help='Password is required')
 post_args.add_argument('role', type=str, required=True, help='Role is required')
 
 patch_args = reqparse.RequestParser()
@@ -24,18 +25,18 @@ patch_args.add_argument('email', type=str)
 patch_args.add_argument('first_name', type=str)
 patch_args.add_argument('last_name', type=str)
 patch_args.add_argument('phone_number', type=str)
-patch_args.add_argument('password_hash', type=str)
+patch_args.add_argument('password', type=str)
 patch_args.add_argument('role', type=str)
 
 
 class UserDetails(Resource):
-    @jwt_required()
+    # @jwt_required()
     def get(self):
         users = User.query.all()
         result = user_schema.dump(users,many=True)
         return make_response(jsonify(result), 200)
 
-    @admin_required()  
+  
     def post(self):
         data = post_args.parse_args()
 
@@ -47,14 +48,14 @@ class UserDetails(Resource):
         existing_user = User.query.filter_by(email=data['email']).first()
         if existing_user:
             return make_response(jsonify({"error": "User with this email address already exists"}), 409)
-
+        hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
         new_user = User(
             username=data['username'],
             email=data['email'],
             first_name=data['first_name'],
             last_name=data['last_name'],
             phone_number=data['phone_number'],
-            password_hash=data['password_hash'],
+            password=hashed_password,
             role=data['role']
         )
         db.session.add(new_user)

@@ -5,12 +5,12 @@ from flask_bcrypt import Bcrypt
 from flask_jwt_extended import jwt_required, get_jwt, JWTManager,get_jwt_identity
 from flask_jwt_extended import create_access_token,create_refresh_token
 from models import User, db, TokenBlocklist
-from serializer import userSchema
+from serializer import user_schema
 
 bcrypt = Bcrypt()
 
-authentication_bp = Blueprint('authentication_bp', __name__)
-api = Api(authentication_bp)
+auth_bp = Blueprint('auth_bp', __name__)
+api = Api(auth_bp)
 
 
 login_args = reqparse.RequestParser()
