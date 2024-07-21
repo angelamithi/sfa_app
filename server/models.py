@@ -78,7 +78,7 @@ class PollResponse(db.Model):
     __tablename__ = "poll_responses"
     id = db.Column(db.Integer, primary_key=True)
     poll_id = db.Column(db.Integer, db.ForeignKey('polls.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)# the person who has repsonded to the poll
     response = db.Column(db.String(255), nullable=False)
 
 class Transcription(db.Model):

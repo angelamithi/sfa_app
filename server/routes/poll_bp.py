@@ -1,8 +1,8 @@
 from flask import Blueprint, make_response, jsonify
 from flask_restful import Api, Resource, reqparse
 from flask_jwt_extended import jwt_required
-from models import Poll, db
-from serializer import poll_schema
+from models import Poll, db,Event,User,PollResponse
+from serializer import poll_schema,poll_response_schema
 from auth import admin_required
 
 poll_bp = Blueprint('poll_bp', __name__)
@@ -24,10 +24,24 @@ class PollDetails(Resource):
     @jwt_required()
     def get(self):
         polls = Poll.query.all()
-        result = [poll_schema.dump(poll) for poll in polls]
-        return make_response(jsonify(result), 200)
+        poll_details = []
 
-    @admin_required()
+        for poll in polls:
+            event = Event.query.get(poll.event_id)
+            poll_owner = User.query.get(poll.poll_owner_id)
+
+            detail = {
+                'id': poll.id,
+                'question': poll.question,
+                'event_name': event.title if event else None,
+                'poll_owner_name': f"{poll_owner.first_name} {poll_owner.last_name}" if poll_owner else None
+            }
+
+            poll_details.append(detail)
+
+        return make_response(jsonify(poll_details), 200)
+
+
     def post(self):
         data = post_args.parse_args()
 
@@ -48,12 +62,46 @@ api.add_resource(PollDetails, '/polls')
 class PollById(Resource):
     @jwt_required()
     def get(self, id):
+        # Fetch the poll
         poll = Poll.query.get(id)
         if not poll:
             return make_response(jsonify({"error": "Poll not found"}), 404)
 
-        result = poll_schema.dump(poll)
+        # Fetch poll responses
+        responses = PollResponse.query.filter_by(poll_id=id).all()
+
+        # Fetch event and poll owner details
+        event = Event.query.get(poll.event_id)
+        poll_owner = User.query.get(poll.poll_owner_id)
+
+        # Serialize poll data
+        poll_data = poll_schema.dump(poll)
+        response_data = poll_response_schema.dump(responses, many=True)
+
+        # Add event name and poll owner name to poll data
+        poll_data['event_name'] = event.title if event else None
+        poll_data['poll_owner_name'] = f"{poll_owner.first_name} {poll_owner.last_name}" if poll_owner else None
+
+        # Fetch user names for each response
+        for response in response_data:
+            user = User.query.get(response['user_id'])
+            response['user_name'] = f"{user.first_name} {user.last_name}" if user else "Unknown"
+
+        # Log the fetched data for debugging
+        print("Poll Data:", poll_data)
+        print("Response Data:", response_data)
+
+        # Combine poll details and responses
+        result = {
+            "poll": poll_data,
+            "responses": response_data
+        }
         return make_response(jsonify(result), 200)
+
+
+
+
+
 
     @admin_required()
     def delete(self, id):

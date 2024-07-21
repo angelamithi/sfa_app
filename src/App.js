@@ -14,6 +14,9 @@ import ViewPollDetails from "./components/ViewPollDetails";
 import ViewSurveyDetails from "./components/ViewSurveyDetails";
 import ViewUserDetail from "./components/ViewUserDetail";
 import ViewSingleCommunityDetails from "./components/ViewSingleCommunityDetails";
+import ViewSingleEventDetail from "./components/ViewSingleEventDetail";
+import ViewSinglePollDetails from "./components/ViewSinglePollDetails";
+import ViewSingleSurveyDetails from "./components/ViewSingleSurveyDetails";
 import Invoices from "./scenes/invoices";
 import Contacts from "./scenes/contacts";
 import Bar from "./scenes/bar";
@@ -83,8 +86,11 @@ function App() {
                   <Route path="/community" element={<ViewCommunityDetails />} />
                   <Route path="/community/:id" element={<ViewSingleCommunityDetails/>} />
                   <Route path="/events" element={<ViewEventDetails />} />
+                  <Route path="/events/:id" element={<ViewSingleEventDetail />} />
                   <Route path="/polls" element={<ViewPollDetails />} />
+                  <Route path="/polls/:id" element={<ViewSinglePollDetails/>} />
                   <Route path="/surveys" element={<ViewSurveyDetails />} />
+                  <Route path="/surveys/:id" element={<ViewSingleSurveyDetails />} />
                  
                   
                   <Route path="/contacts" element={<Contacts />} />

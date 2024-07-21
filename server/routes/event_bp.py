@@ -1,9 +1,10 @@
 from flask import Blueprint, make_response, jsonify
 from flask_restful import Api, Resource, reqparse
 from flask_jwt_extended import jwt_required
-from models import Event, db
+from models import Event, db,User,Report
 from serializer import event_schema
 from auth import admin_required
+from sqlalchemy.orm import joinedload
 
 event_bp = Blueprint('event_bp', __name__)
 api = Api(event_bp)
@@ -29,11 +30,33 @@ patch_args.add_argument('community_id', type=int)
 patch_args.add_argument('coordinator_id', type=int)
 
 class EventDetails(Resource):
+
     @jwt_required()
     def get(self):
+        # Query all events
         events = Event.query.all()
-        result = event_schema.dump(events, many=True)
-        return make_response(jsonify(result), 200)
+
+        # Construct the response manually
+        event_list = []
+        for event in events:
+            # Fetch coordinator details
+            coordinator = User.query.get(event.coordinator_id)
+
+            event_data = {
+                "id": event.id,
+                "title": event.title,
+                "description": event.description,
+                "event_date": event.event_date.isoformat() if event.event_date else None,
+                "start_time": event.start_time.isoformat() if event.start_time else None,
+                "end_time": event.end_time.isoformat() if event.end_time else None,
+                "zoom_link": event.zoom_link,
+                "coordinator_name": f"{coordinator.first_name} {coordinator.last_name}" if coordinator else None,
+                "community_name": event.community.name if event.community else None,
+            }
+            event_list.append(event_data)
+
+        return make_response(jsonify(event_list), 200)
+
 
     @admin_required()
     def post(self):
@@ -57,6 +80,7 @@ class EventDetails(Resource):
 
 api.add_resource(EventDetails, '/events')
 
+
 class EventById(Resource):
     @jwt_required()
     def get(self, id):
@@ -64,8 +88,37 @@ class EventById(Resource):
         if not event:
             return make_response(jsonify({"error": "Event not found"}), 404)
 
-        result = event_schema.dump(event)
-        return make_response(jsonify(result), 200)
+        # Fetch coordinator details
+        coordinator = User.query.get(event.coordinator_id)
+
+        # Fetch report details
+        report = Report.query.filter_by(event_id=event.id).first()
+
+        # Fetch user details for the report
+        report_user = User.query.get(report.user_id) if report else None
+
+        # Construct the response manually
+        event_data = {
+            "id": event.id,
+            "title": event.title,
+            "description": event.description,
+            "event_date": event.event_date.isoformat() if event.event_date else None,
+            "start_time": event.start_time.isoformat() if event.start_time else None,
+            "end_time": event.end_time.isoformat() if event.end_time else None,
+            "zoom_link": event.zoom_link,
+            "coordinator_name": f"{coordinator.first_name} {coordinator.last_name}" if coordinator else None,
+            "community_name": event.community.name if event.community else None,
+            "report": {
+                "id": report.id if report else None,
+                "num_attendees": report.num_attendees if report else None,
+                "overview": report.overview if report else None,
+                "user_name": f"{report_user.first_name} {report_user.last_name}" if report_user else None
+            } if report else None
+        }
+
+        return make_response(jsonify(event_data), 200)
+
+
 
     @admin_required()
     def delete(self, id):

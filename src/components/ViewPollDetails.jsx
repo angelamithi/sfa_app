@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { retrieve } from "./Encryption";
 
 const ViewPollDetails = () => {
   const [pollDetails, setPollDetails] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch('/polls', {
@@ -20,6 +22,11 @@ const ViewPollDetails = () => {
       });
   }, []);
 
+  // Handler for row click
+  const handleRowClick = (id) => {
+    navigate(`/polls/${id}`); // Navigate to poll details page
+  };
+
   return (
     <div className='content-wrapper' style={{ marginLeft: "280px", backgroundColor: "white", marginTop: "20px" }}>
       <h2 style={{ marginLeft: "500px", marginBottom: "50px" }}>Poll Details</h2>
@@ -28,19 +35,17 @@ const ViewPollDetails = () => {
           <tr>
             <th>ID</th>
             <th>Question</th>
-            <th>Options</th>
-            <th>Event ID</th>
-            <th>Poll Owner ID</th>
+            <th>Event Name</th>
+            <th>Poll Owner Name</th>
           </tr>
         </thead>
         <tbody>
           {pollDetails.map(poll => (
-            <tr key={poll.id}>
+            <tr key={poll.id} onClick={() => handleRowClick(poll.id)} style={{ cursor: 'pointer' }}>
               <td>{poll.id}</td>
               <td>{poll.question}</td>
-              <td>{JSON.stringify(poll.options)}</td>
-              <td>{poll.event_id}</td>
-              <td>{poll.poll_owner_id}</td>
+              <td>{poll.event_name}</td>
+              <td>{poll.poll_owner_name}</td>
             </tr>
           ))}
         </tbody>

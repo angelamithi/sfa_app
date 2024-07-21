@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { retrieve } from "./Encryption";
 
 const ViewSurveyDetails = () => {
   const [surveyDetails, setSurveyDetails] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch('/surveys', {
@@ -20,6 +22,11 @@ const ViewSurveyDetails = () => {
       });
   }, []);
 
+  // Handler for row click
+  const handleRowClick = (id) => {
+    navigate(`/surveys/${id}`); // Navigate to survey details page
+  };
+
   return (
     <div className='content-wrapper' style={{ marginLeft: "280px", backgroundColor: "white", marginTop: "20px" }}>
       <h2 style={{ marginLeft: "500px", marginBottom: "50px" }}>Survey Details</h2>
@@ -28,17 +35,15 @@ const ViewSurveyDetails = () => {
           <tr>
             <th>ID</th>
             <th>Title</th>
-            <th>Questions</th>
-            <th>Survey Owner ID</th>
+            <th>Owner Name</th> {/* Updated header */}
           </tr>
         </thead>
         <tbody>
           {surveyDetails.map(survey => (
-            <tr key={survey.id}>
+            <tr key={survey.id} onClick={() => handleRowClick(survey.id)} style={{ cursor: 'pointer' }}>
               <td>{survey.id}</td>
               <td>{survey.title}</td>
-              <td>{JSON.stringify(survey.questions)}</td>
-              <td>{survey.survey_owner_id}</td>
+              <td>{survey.owner_name}</td> {/* Display owner name */}
             </tr>
           ))}
         </tbody>

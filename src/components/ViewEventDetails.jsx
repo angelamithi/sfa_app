@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import { retrieve } from "./Encryption";
 
 const ViewEventDetails = () => {
   const [eventDetails, setEventDetails] = useState([]);
   const [currentDateTime, setCurrentDateTime] = useState(new Date()); // Current date and time
+  const navigate = useNavigate(); // Initialize navigate
 
   useEffect(() => {
     fetch('/events', {
@@ -42,6 +44,11 @@ const ViewEventDetails = () => {
     return 'Ongoing';
   };
 
+  // Handler for row click
+  const handleRowClick = (id) => {
+    navigate(`/events/${id}`); // Navigate to event details page
+  };
+
   return (
     <div className='content-wrapper' style={{ marginLeft: "280px", backgroundColor: "white", marginTop: "20px" }}>
       <h2 style={{ marginLeft: "500px", marginBottom: "50px" }}>Event Details</h2>
@@ -55,14 +62,14 @@ const ViewEventDetails = () => {
             <th>Start Time</th>
             <th>End Time</th>
             <th>Zoom Link</th>
-            <th>Community ID</th>
-            <th>Coordinator ID</th>
-            <th>Status</th> {/* Added status column */}
+            <th>Coordinator Name</th>
+            <th>Community Name</th>
+            <th>Status</th>
           </tr>
         </thead>
         <tbody>
           {eventDetails.map(event => (
-            <tr key={event.id}>
+            <tr key={event.id} onClick={() => handleRowClick(event.id)} style={{ cursor: 'pointer' }}>
               <td>{event.id}</td>
               <td>{event.title}</td>
               <td>{event.description}</td>
@@ -70,9 +77,9 @@ const ViewEventDetails = () => {
               <td>{new Date(event.start_time).toLocaleTimeString()}</td>
               <td>{new Date(event.end_time).toLocaleTimeString()}</td>
               <td>{event.zoom_link}</td>
-              <td>{event.community_id}</td>
-              <td>{event.coordinator_id}</td>
-              <td>{event.status}</td> {/* Display the event status */}
+              <td>{event.coordinator_name}</td>
+              <td>{event.community_name}</td>
+              <td>{event.status}</td>
             </tr>
           ))}
         </tbody>
