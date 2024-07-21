@@ -2,8 +2,8 @@ from flask import Blueprint, make_response, jsonify
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from flask_restful import Api, Resource, reqparse
 from flask_jwt_extended import jwt_required
-from models import User, db  
-from serializer import user_schema 
+from models import User, db,UserCommunity,VolunteerHour,Event
+from serializer import user_schema ,community_schema,event_schema,volunteer_hour_schema
 from auth import admin_required
 from flask_bcrypt import Bcrypt
 
@@ -67,6 +67,8 @@ class UserDetails(Resource):
 
 api.add_resource(UserDetails, '/users')
 
+
+
 class UserById(Resource):
     @jwt_required()
     def get(self, id):
@@ -74,9 +76,28 @@ class UserById(Resource):
         if not user:
             return make_response(jsonify({"error": "User not found"}), 404)
 
-        
-        result = user_schema.dump(user)
-        return make_response(jsonify(result), 200)
+        user_data = user_schema.dump(user)
+        user_communities = UserCommunity.query.filter_by(user_id=id).all()
+        communities = [community_schema.dump(uc.community) for uc in user_communities]
+        user_data['communities'] = communities if communities else "No community"
+
+        if user.role == 'Coordinator':
+            # Fetch events coordinated by this user
+            events = Event.query.filter_by(coordinator_id=id).all()
+            events_data = [event_schema.dump(event) for event in events]
+            user_data['events'] = events_data if events_data else "No events coordinated"
+        elif user.role == 'Volunteer':
+            # Fetch volunteer hours and events this user has volunteered in
+            volunteer_hours = VolunteerHour.query.filter_by(user_id=id).all()
+            volunteer_hours_data = [volunteer_hour_schema.dump(hour) for hour in volunteer_hours]
+            events = Event.query.join(VolunteerHour).filter(VolunteerHour.user_id == id).all()
+            events_data = [event_schema.dump(event) for event in events]
+            user_data['volunteer_hours'] = volunteer_hours_data if volunteer_hours_data else "No volunteer hours recorded"
+            user_data['events'] = events_data if events_data else "No events volunteered in"
+
+        return make_response(jsonify(user_data), 200)
+
+
 
     @admin_required() 
     def delete(self, id):

@@ -1,13 +1,11 @@
 import os
-from flask import Blueprint, request, url_for
+from flask import Blueprint, request, url_for, current_app
 from flask_restful import Api, Resource, reqparse, abort
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from flask_bcrypt import Bcrypt
 from flask_mail import Message
 from itsdangerous import URLSafeTimedSerializer
 from dotenv import load_dotenv
 from models import db, User
-from app import mail, bcrypt  # Import bcrypt and mail from the main app file
 
 # Load environment variables
 load_dotenv()
@@ -30,10 +28,6 @@ forgot_password_args.add_argument('email', type=str, required=True)
 forgot_password_args.add_argument('newPassword', type=str, required=True)
 forgot_password_args.add_argument('confirmPassword', type=str, required=True)
 
-# Argument parsers
-change_password_args = reqparse.RequestParser()
-change_password_args.add_argument('email', type=str, required=True)
-
 class RequestChangePassword(Resource):
     def post(self):
         data = change_password_args.parse_args()
@@ -43,10 +37,11 @@ class RequestChangePassword(Resource):
             return {"message": "User not found"}, 404
 
         token = serializer.dumps(email, salt='password-change-salt')
-        change_url = url_for('change_password', token=token, _external=True)
+        change_url = url_for('change_password_bp.change_password', token=token, _external=True)
         message = Message('Password Change Request', sender=os.getenv('MAIL_USERNAME'), recipients=[email])
         message.body = f'To change your password, click the following link: {change_url}'
-        mail.send(message)
+        
+        current_app.mail.send(message)
 
         return {"message": "A password change link has been sent to your email"}, 200
     
@@ -71,13 +66,12 @@ class ChangePassword(Resource):
         if not user:
             return {"message": "User not found"}, 404
 
-        hashed_password = bcrypt.generate_password_hash(new_password).decode('utf-8')
+        hashed_password = current_app.bcrypt.generate_password_hash(new_password).decode('utf-8')
         user.password = hashed_password
 
         db.session.commit()
 
         return {"message": "Password changed successfully"}, 200
-
 
 api.add_resource(ChangePassword, '/change_password')
 
@@ -90,12 +84,14 @@ class RequestResetPassword(Resource):
             return {"message": "User not found"}, 404
 
         token = serializer.dumps(email, salt='password-reset-salt')
-        reset_url = url_for('reset_password', token=token, _external=True)
+        reset_url = url_for('change_password_bp.reset_password', token=token, _external=True)
         message = Message('Password Reset Request', sender=os.getenv('MAIL_USERNAME'), recipients=[email])
         message.body = f'To reset your password, click the following link: {reset_url}'
-        mail.send(message)
+        
+        current_app.mail.send(message)
 
         return {"message": "A password reset link has been sent to your email"}, 200
+
 api.add_resource(RequestResetPassword, '/request_reset_password')
 
 class ResetPassword(Resource):
@@ -113,12 +109,10 @@ class ResetPassword(Resource):
         if not user:
             return {"message": "User not found"}, 404
 
-        hashed_password = bcrypt.generate_password_hash(new_password).decode('utf-8')
+        hashed_password = current_app.bcrypt.generate_password_hash(new_password).decode('utf-8')
         user.password = hashed_password
         db.session.commit()
 
         return {"message": "Password reset successfully"}, 200
-
-
 
 api.add_resource(ResetPassword, '/reset_password')

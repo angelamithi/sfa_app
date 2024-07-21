@@ -35,12 +35,7 @@ class UserCommunitySchema(SQLAlchemyAutoSchema):
 user_community_schema = UserCommunitySchema()
 
 
-class EventSchema(SQLAlchemyAutoSchema):
-    class Meta:
-        model = Event
-        include_fk = True
 
-event_schema = EventSchema()
 
 
 class SurveySchema(SQLAlchemyAutoSchema):
@@ -98,6 +93,13 @@ class ReportSchema(SQLAlchemyAutoSchema):
 
 report_schema = ReportSchema()
 
+class EventSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = Event
+        include_fk = True
+    # Explicitly include the ReportSchema for the `report` field
+    report = fields.Nested(ReportSchema, default=None)
 
+event_schema = EventSchema()
 
 
