@@ -7,7 +7,13 @@ import VolunteerSidebar from "./scenes/global/VolunteerSidebar";
 import AdminDashboard from "./scenes/dashboard/AdminDashboard";
 import CoordinatorDashboard from "./scenes/dashboard/CoordinatorDashBoard";
 import VolunteerDashboard from "./scenes/dashboard/VolunteerDashboard";
-import Team from "./scenes/team";
+import ViewTeamDetails from "./components/ViewTeamDetails";
+import ViewCommunityDetails from "./components/ViewCommunityDetails";
+import ViewEventDetails from "./components/ViewEventDetails";
+import ViewPollDetails from "./components/ViewPollDetails";
+import ViewSurveyDetails from "./components/ViewSurveyDetails";
+import ViewUserDetail from "./components/ViewUserDetail";
+import ViewSingleCommunityDetails from "./components/ViewSingleCommunityDetails";
 import Invoices from "./scenes/invoices";
 import Contacts from "./scenes/contacts";
 import Bar from "./scenes/bar";
@@ -72,7 +78,15 @@ function App() {
                   
                   {/* Other routes */}
                   <Route path="/change_password" element={<ChangePassword />} />
-                  <Route path="/team" element={<Team />} />
+                  <Route path="/team" element={<ViewTeamDetails />} />
+                  <Route path="/user/:id" element={<ViewUserDetail />} />
+                  <Route path="/community" element={<ViewCommunityDetails />} />
+                  <Route path="/community/:id" element={<ViewSingleCommunityDetails/>} />
+                  <Route path="/events" element={<ViewEventDetails />} />
+                  <Route path="/polls" element={<ViewPollDetails />} />
+                  <Route path="/surveys" element={<ViewSurveyDetails />} />
+                 
+                  
                   <Route path="/contacts" element={<Contacts />} />
                   <Route path="/invoices" element={<Invoices />} />
                   <Route path="/form" element={<Form />} />

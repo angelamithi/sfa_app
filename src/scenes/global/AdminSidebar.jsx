@@ -155,7 +155,7 @@ const AdminSidebar = () => {
             />
             <Item
               title="Polls"
-              to="/events"
+              to="/polls"
               icon={<PeopleOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
