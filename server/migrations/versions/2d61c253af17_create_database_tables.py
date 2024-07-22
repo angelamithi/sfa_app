@@ -1,8 +1,8 @@
-"""create database tables
+"""create  database tables
 
-Revision ID: c8be2ce1f55d
+Revision ID: 2d61c253af17
 Revises: 
-Create Date: 2024-07-17 11:19:28.901629
+Create Date: 2024-07-22 12:16:40.810304
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'c8be2ce1f55d'
+revision = '2d61c253af17'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -40,6 +40,11 @@ def upgrade():
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('username')
     )
+    op.create_table('years',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('year_name', sa.Integer(), nullable=True),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('communities',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=100), nullable=False),
@@ -49,10 +54,21 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
     )
+    op.create_table('sessions',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=30), nullable=False),
+    sa.Column('start_date', sa.DateTime(), nullable=False),
+    sa.Column('end_date', sa.DateTime(), nullable=False),
+    sa.Column('year_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['year_id'], ['years.id'], name=op.f('fk_sessions_year_id_years')),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('surveys',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('title', sa.String(length=100), nullable=False),
     sa.Column('questions', sa.JSON(), nullable=False),
+    sa.Column('survey_start_date', sa.DateTime(), nullable=False),
+    sa.Column('survey_stop_date', sa.DateTime(), nullable=False),
     sa.Column('survey_owner_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['survey_owner_id'], ['users.id'], name=op.f('fk_surveys_survey_owner_id_users')),
     sa.PrimaryKeyConstraint('id')
@@ -69,6 +85,18 @@ def upgrade():
     sa.Column('coordinator_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['community_id'], ['communities.id'], name=op.f('fk_events_community_id_communities')),
     sa.ForeignKeyConstraint(['coordinator_id'], ['users.id'], name=op.f('fk_events_coordinator_id_users')),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('goals',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.String(), nullable=False),
+    sa.Column('name', sa.String(length=30), nullable=False),
+    sa.Column('description', sa.String(), nullable=False),
+    sa.Column('session_id', sa.String(), nullable=False),
+    sa.Column('year_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['session_id'], ['sessions.id'], name=op.f('fk_goals_session_id_sessions')),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_goals_user_id_users')),
+    sa.ForeignKeyConstraint(['year_id'], ['years.id'], name=op.f('fk_goals_year_id_years')),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('survey_responses',
@@ -91,6 +119,8 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('question', sa.String(length=255), nullable=False),
     sa.Column('options', sa.JSON(), nullable=False),
+    sa.Column('poll_start_date', sa.DateTime(), nullable=False),
+    sa.Column('poll_stop_date', sa.DateTime(), nullable=False),
     sa.Column('event_id', sa.Integer(), nullable=False),
     sa.Column('poll_owner_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['event_id'], ['events.id'], name=op.f('fk_polls_event_id_events')),
@@ -107,25 +137,26 @@ def upgrade():
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_reports_user_id_users')),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('tasks',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=30), nullable=False),
+    sa.Column('description', sa.String(), nullable=False),
+    sa.Column('goals_id', sa.String(), nullable=False),
+    sa.Column('event_id', sa.Integer(), nullable=True),
+    sa.Column('year_id', sa.Integer(), nullable=True),
+    sa.Column('start_date', sa.DateTime(), nullable=False),
+    sa.Column('end_date', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['event_id'], ['events.id'], name=op.f('fk_tasks_event_id_events')),
+    sa.ForeignKeyConstraint(['goals_id'], ['goals.id'], name=op.f('fk_tasks_goals_id_goals')),
+    sa.ForeignKeyConstraint(['year_id'], ['years.id'], name=op.f('fk_tasks_year_id_years')),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('transcriptions',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('event_id', sa.Integer(), nullable=False),
     sa.Column('transcribed_content', sa.Text(), nullable=False),
     sa.Column('summary', sa.Text(), nullable=False),
     sa.ForeignKeyConstraint(['event_id'], ['events.id'], name=op.f('fk_transcriptions_event_id_events')),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('volunteer_hours',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('date', sa.Date(), nullable=False),
-    sa.Column('hours', sa.Float(), nullable=False),
-    sa.Column('event_id', sa.Integer(), nullable=True),
-    sa.Column('approved_by', sa.Integer(), nullable=True),
-    sa.Column('approved_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['approved_by'], ['users.id'], name=op.f('fk_volunteer_hours_approved_by_users')),
-    sa.ForeignKeyConstraint(['event_id'], ['events.id'], name=op.f('fk_volunteer_hours_event_id_events')),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_volunteer_hours_user_id_users')),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('poll_responses',
@@ -137,21 +168,51 @@ def upgrade():
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_poll_responses_user_id_users')),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('user_tasks',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('task_id', sa.Integer(), nullable=False),
+    sa.Column('assigned_at', sa.DateTime(), nullable=True),
+    sa.Column('status', sa.String(length=50), nullable=True),
+    sa.ForeignKeyConstraint(['task_id'], ['tasks.id'], name=op.f('fk_user_tasks_task_id_tasks')),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_user_tasks_user_id_users')),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('volunteer_hours',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('date', sa.Date(), nullable=False),
+    sa.Column('hours', sa.Float(), nullable=False),
+    sa.Column('event_id', sa.Integer(), nullable=True),
+    sa.Column('task_id', sa.Integer(), nullable=True),
+    sa.Column('approved_by', sa.Integer(), nullable=True),
+    sa.Column('approved_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['approved_by'], ['users.id'], name=op.f('fk_volunteer_hours_approved_by_users')),
+    sa.ForeignKeyConstraint(['event_id'], ['events.id'], name=op.f('fk_volunteer_hours_event_id_events')),
+    sa.ForeignKeyConstraint(['task_id'], ['tasks.id'], name=op.f('fk_volunteer_hours_task_id_tasks')),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_volunteer_hours_user_id_users')),
+    sa.PrimaryKeyConstraint('id')
+    )
     # ### end Alembic commands ###
 
 
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
-    op.drop_table('poll_responses')
     op.drop_table('volunteer_hours')
+    op.drop_table('user_tasks')
+    op.drop_table('poll_responses')
     op.drop_table('transcriptions')
+    op.drop_table('tasks')
     op.drop_table('reports')
     op.drop_table('polls')
     op.drop_table('user_communities')
     op.drop_table('survey_responses')
+    op.drop_table('goals')
     op.drop_table('events')
     op.drop_table('surveys')
+    op.drop_table('sessions')
     op.drop_table('communities')
+    op.drop_table('years')
     op.drop_table('users')
     with op.batch_alter_table('tokenblocklist', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_tokenblocklist_jti'))

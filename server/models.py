@@ -11,6 +11,18 @@ metadata = MetaData(naming_convention={
 db = SQLAlchemy(metadata=metadata)
 
 
+
+class UserTask(db.Model):
+    __tablename__ = 'user_tasks'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    task_id = db.Column(db.Integer, db.ForeignKey('tasks.id'), nullable=False)
+    assigned_at = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(50), default='pending')
+
+    user = db.relationship('User', back_populates='user_tasks')
+    task = db.relationship('Tasks', back_populates='user_tasks')
+
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
@@ -19,7 +31,7 @@ class User(db.Model):
     first_name = db.Column(db.String, nullable=False)
     last_name = db.Column(db.String, nullable=False)
     phone_number = db.Column(db.String)
-    password= db.Column(db.String(128), nullable=False)
+    password = db.Column(db.String(128), nullable=False)
     role = db.Column(db.String(50), nullable=False)
     volunteer_hours = db.relationship('VolunteerHour', backref='user', lazy=True, foreign_keys='VolunteerHour.user_id')
     approved_volunteer_hours = db.relationship('VolunteerHour', backref='approved_by_user', lazy=True, foreign_keys='VolunteerHour.approved_by')
@@ -30,6 +42,27 @@ class User(db.Model):
     survey_responses = db.relationship('SurveyResponse', backref='user', lazy=True)
     owned_reports = db.relationship('Report', backref='owner', lazy=True)
     communities = db.relationship('UserCommunity', back_populates='user')
+    goals = db.relationship('Goals', backref="user")
+    user_tasks = db.relationship('UserTask', back_populates='user')
+
+class Tasks(db.Model):
+    __tablename__ = 'tasks'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30), nullable=False)
+    description = db.Column(db.String, nullable=False)
+    goals_id = db.Column(db.String, db.ForeignKey('goals.id'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
+    year_id = db.Column(db.Integer, db.ForeignKey('years.id'))
+   
+    user_tasks = db.relationship('UserTask', back_populates='task')
+    start_date = db.Column(db.DateTime, nullable=False)
+    end_date = db.Column(db.DateTime, nullable=False)
+    volunteer_hours = db.relationship('VolunteerHour', backref='task')
+
+   
+    @hybrid_property
+    def calculated_hours(self):
+        return (self.end_date - self.start_date).total_seconds() / 3600
 
 class Community(db.Model):
     __tablename__ = "communities"
@@ -64,12 +97,16 @@ class Event(db.Model):
     transcription = db.relationship('Transcription', uselist=False, backref='event')
     report = db.relationship('Report', uselist=False, backref='event')
     volunteer_hours = db.relationship('VolunteerHour', backref='event', lazy=True)
+    tasks = db.relationship('Tasks', backref='event', lazy=True)
+
 
 class Poll(db.Model):
     __tablename__ = "polls"
     id = db.Column(db.Integer, primary_key=True)
     question = db.Column(db.String(255), nullable=False)
     options = db.Column(db.JSON, nullable=False)
+    poll_start_date=db.Column(db.DateTime,nullable=False)
+    poll_stop_date=db.Column(db.DateTime,nullable=False)
     responses = db.relationship('PollResponse', backref='poll', lazy=True)
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
     poll_owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
@@ -103,6 +140,8 @@ class VolunteerHour(db.Model):
     date = db.Column(db.Date, nullable=False)
     hours = db.Column(db.Float, nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
+    task_id = db.Column(db.Integer, db.ForeignKey('tasks.id'), nullable=True)  # Foreign key to Tasks
+   # Relationship to Tasks
     approved_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     approved_at = db.Column(db.DateTime)
 
@@ -112,6 +151,8 @@ class Survey(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     questions = db.Column(db.JSON, nullable=False)
+    survey_start_date=db.Column(db.DateTime,nullable=False)
+    survey_stop_date=db.Column(db.DateTime,nullable=False)
     responses = db.relationship('SurveyResponse', backref='survey', lazy=True)
     survey_owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
@@ -121,6 +162,36 @@ class SurveyResponse(db.Model):
     survey_id = db.Column(db.Integer, db.ForeignKey('surveys.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     responses = db.Column(db.JSON, nullable=False)
+
+class Session(db.Model):
+    __tablename__ = 'sessions'
+    id = db.Column(db.Integer,primary_key=True)
+    name = db.Column(db.String(30), nullable=False)
+    start_date = db.Column(db.DateTime, nullable=False)
+    end_date = db.Column(db.DateTime, nullable=False)
+    year_id = db.Column(db.Integer, db.ForeignKey('years.id'))
+    goals = db.relationship('Goals', backref="session")
+
+
+class Goals(db.Model):
+    __tablename__ = 'goals'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
+    name = db.Column(db.String(30), nullable=False)
+    description = db.Column(db.String, nullable=False)
+    session_id = db.Column(db.String, db.ForeignKey('sessions.id'), nullable=False)
+    year_id = db.Column(db.Integer, db.ForeignKey('years.id'))
+    tasks = db.relationship('Tasks', backref="goals")
+
+
+
+class Year(db.Model):
+    __tablename__ = "years"
+    id = db.Column(db.Integer,primary_key=True)
+    year_name = db.Column(db.Integer)
+    tasks = db.relationship('Tasks', backref='year')
+    sessions = db.relationship('Session', backref='year')
+    goals = db.relationship('Goals', backref='year')
 
 
 class TokenBlocklist(db.Model):
