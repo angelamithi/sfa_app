@@ -167,6 +167,27 @@ const AdminSidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
+            <Item
+              title="Goals"
+              to="/goals"
+              icon={<HelpOutlineOutlinedIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+             <Item
+              title="Tasks"
+              to="/tasks"
+              icon={<HelpOutlineOutlinedIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+             <Item
+              title="Sessions"
+              to="/sessions"
+              icon={<HelpOutlineOutlinedIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
               <Item
               title="Calendar"
               to="/calendar"
@@ -174,13 +195,7 @@ const AdminSidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
-              <Item
-              title="FAQ Page"
-              to="/faq"
-              icon={<HelpOutlineOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
+              
             
             
             <Typography

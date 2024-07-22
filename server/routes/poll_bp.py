@@ -30,16 +30,23 @@ class PollDetails(Resource):
             event = Event.query.get(poll.event_id)
             poll_owner = User.query.get(poll.poll_owner_id)
 
+            # Extract only the date part from datetime
+            poll_start_date = poll.poll_start_date.strftime('%Y-%m-%d') if poll.poll_start_date else None
+            poll_stop_date = poll.poll_stop_date.strftime('%Y-%m-%d') if poll.poll_stop_date else None
+
             detail = {
                 'id': poll.id,
                 'question': poll.question,
                 'event_name': event.title if event else None,
-                'poll_owner_name': f"{poll_owner.first_name} {poll_owner.last_name}" if poll_owner else None
+                'poll_owner_name': f"{poll_owner.first_name} {poll_owner.last_name}" if poll_owner else None,
+                'poll_start_date': poll_start_date,
+                'poll_stop_date': poll_stop_date
             }
 
             poll_details.append(detail)
 
         return make_response(jsonify(poll_details), 200)
+
 
 
     def post(self):
@@ -58,6 +65,10 @@ class PollDetails(Resource):
         return make_response(jsonify(result), 201)
 
 api.add_resource(PollDetails, '/polls')
+
+
+
+from datetime import datetime
 
 class PollById(Resource):
     @jwt_required()
@@ -82,6 +93,10 @@ class PollById(Resource):
         poll_data['event_name'] = event.title if event else None
         poll_data['poll_owner_name'] = f"{poll_owner.first_name} {poll_owner.last_name}" if poll_owner else None
 
+        # Format poll dates to only include date part
+        poll_data['poll_start_date'] = poll.poll_start_date.strftime('%Y-%m-%d') if poll.poll_start_date else None
+        poll_data['poll_stop_date'] = poll.poll_stop_date.strftime('%Y-%m-%d') if poll.poll_stop_date else None
+
         # Fetch user names for each response
         for response in response_data:
             user = User.query.get(response['user_id'])
@@ -97,8 +112,6 @@ class PollById(Resource):
             "responses": response_data
         }
         return make_response(jsonify(result), 200)
-
-
 
 
 

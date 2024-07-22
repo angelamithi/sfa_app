@@ -4,7 +4,7 @@ from flask_restful import Api, Resource, abort, reqparse
 from flask_bcrypt import Bcrypt
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field, fields
 from marshmallow.fields import Nested
-from models import (TokenBlocklist,db,User,Community,UserCommunity,Event,Survey,SurveyResponse,Poll,PollResponse,VolunteerHour,Transcription,Report)
+from models import TokenBlocklist,db,User,Community,UserCommunity,Event,Survey,SurveyResponse,Poll,PollResponse,VolunteerHour,Transcription,Report,Goals,Tasks,UserTask,Session,Year
 
 serializer_bp = Blueprint('serializer_bp', __name__)
 ma = Marshmallow(serializer_bp)
@@ -103,3 +103,38 @@ class EventSchema(SQLAlchemyAutoSchema):
 event_schema = EventSchema()
 
 
+class GoalSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = Goals
+        include_fk = True
+
+goal_schema = GoalSchema()
+
+class TaskSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = Tasks
+        include_fk = True
+
+tasks_schema = TaskSchema()
+
+class UserTasksSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model =UserTask
+        include_fk = True
+
+user_task_schema = TaskSchema()
+
+class SessionSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model =Session
+        include_fk = True
+
+session_schema = SessionSchema()
+
+
+class YearSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model =Year
+        include_fk = True
+
+year_schema = YearSchema()

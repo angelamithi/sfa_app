@@ -18,6 +18,7 @@ patch_args.add_argument('title', type=str)
 patch_args.add_argument('questions', type=dict)
 patch_args.add_argument('survey_owner_id', type=int)
 
+
 class SurveyDetails(Resource):
     @jwt_required()
     def get(self):
@@ -29,9 +30,13 @@ class SurveyDetails(Resource):
         for survey, owner_first_name, owner_last_name in surveys:
             survey_data = survey_schema.dump(survey)
             survey_data['owner_name'] = f"{owner_first_name} {owner_last_name}"
+            # Format dates to only include the date part (YYYY-MM-DD)
+            survey_data['survey_start_date'] = survey.survey_start_date.date().strftime('%Y-%m-%d')
+            survey_data['survey_stop_date'] = survey.survey_stop_date.date().strftime('%Y-%m-%d')
             result.append(survey_data)
 
         return make_response(jsonify(result), 200)
+
 
     @admin_required()
     def post(self):
@@ -49,6 +54,7 @@ class SurveyDetails(Resource):
         return make_response(jsonify(result), 201)
 
 api.add_resource(SurveyDetails, '/surveys')
+
 
 class SurveyById(Resource):
     @jwt_required()
@@ -73,6 +79,10 @@ class SurveyById(Resource):
         # Add the owner of the survey to survey data
         survey_owner = User.query.get(survey.survey_owner_id)
         survey_data['survey_owner_name'] = f"{survey_owner.first_name} {survey_owner.last_name}" if survey_owner else "Unknown"
+
+        # Format dates to only include date part
+        survey_data['survey_start_date'] = survey.survey_start_date.strftime('%Y-%m-%d') if survey.survey_start_date else None
+        survey_data['survey_end_date'] = survey.survey_stop_date.strftime('%Y-%m-%d') if survey.survey_stop_date else None
 
         # Combine survey details and responses
         result = {

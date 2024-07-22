@@ -36,6 +36,8 @@ const ViewSurveyDetails = () => {
             <th>ID</th>
             <th>Title</th>
             <th>Owner Name</th> {/* Updated header */}
+            <th>Start Date</th> {/* New header */}
+            <th>Stop Date</th> {/* New header */}
           </tr>
         </thead>
         <tbody>
@@ -44,6 +46,8 @@ const ViewSurveyDetails = () => {
               <td>{survey.id}</td>
               <td>{survey.title}</td>
               <td>{survey.owner_name}</td> {/* Display owner name */}
+              <td>{survey.survey_start_date}</td> {/* Display start date */}
+              <td>{survey.survey_stop_date}</td> {/* Display stop date */}
             </tr>
           ))}
         </tbody>

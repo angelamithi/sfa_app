@@ -37,6 +37,8 @@ const ViewPollDetails = () => {
             <th>Question</th>
             <th>Event Name</th>
             <th>Poll Owner Name</th>
+            <th>Start Date</th>
+            <th>Stop Date</th>
           </tr>
         </thead>
         <tbody>
@@ -46,6 +48,8 @@ const ViewPollDetails = () => {
               <td>{poll.question}</td>
               <td>{poll.event_name}</td>
               <td>{poll.poll_owner_name}</td>
+              <td>{poll.poll_start_date}</td>
+              <td>{poll.poll_stop_date}</td>
             </tr>
           ))}
         </tbody>

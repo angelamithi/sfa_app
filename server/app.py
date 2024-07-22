@@ -23,6 +23,11 @@ from routes.reports_bp import report_bp
 from routes.transcription_bp import transcription_bp
 from routes.auth_bp import auth_bp
 from routes.reset_password_bp import change_password_bp
+from routes.goals_bp import goals_bp
+from routes.tasks_bp import tasks_bp
+from routes.user_tasks_bp import user_task_bp
+from routes.sessions_bp import sessions_bp
+from routes.year_bp import years_bp
 from flask_mail import Mail
 
 # Initialize Flask components
@@ -75,6 +80,17 @@ def create_app():
     app.register_blueprint(volunteer_hour_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(change_password_bp)
+    app.register_blueprint(goals_bp)
+    app.register_blueprint(user_task_bp)
+    app.register_blueprint(tasks_bp)
+    app.register_blueprint(sessions_bp)
+    app.register_blueprint(years_bp)
+
+
+
+
+
+
 
     return app
 

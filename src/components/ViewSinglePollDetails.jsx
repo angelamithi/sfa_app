@@ -48,6 +48,14 @@ const ViewSinglePollDetails = () => {
           <p>{pollDetail?.poll?.poll_owner_name || 'Poll owner name not available'}</p>
         </div>
         <div>
+          <h4>Start Date:</h4>
+          <p>{pollDetail?.poll?.poll_start_date || 'Start date not available'}</p>
+        </div>
+        <div>
+          <h4>Stop Date:</h4>
+          <p>{pollDetail?.poll?.poll_stop_date || 'Stop date not available'}</p>
+        </div>
+        <div>
           <h4>Options:</h4>
           <ul>
             {pollDetail?.poll?.options ? (

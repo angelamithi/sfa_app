@@ -36,11 +36,19 @@ const ViewSingleSurveyDetails = () => {
       <div>
         <h3>{surveyDetail?.survey?.title || 'Survey title not available'}</h3>
         <div>
+          <h4>Survey Start Date:</h4>
+          <p>{surveyDetail?.survey?.survey_start_date || 'Start date not available'}</p>
+          <h4>Survey End Date:</h4>
+          <p>{surveyDetail?.survey?.survey_end_date || 'End date not available'}</p>
+        </div>
+        <div>
           <h4>Questions:</h4>
           {surveyDetail?.survey?.questions ? (
             <ul>
-              {surveyDetail.survey.questions.map((item, index) => (
-                <li key={index}>{item.question || 'No question text available'}</li>
+              {Object.entries(surveyDetail.survey.questions).map(([key, question], index) => (
+                <li key={index}>
+                  <strong>{key}:</strong> {question || 'No question text available'}
+                </li>
               ))}
             </ul>
           ) : (
