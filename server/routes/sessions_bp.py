@@ -1,9 +1,10 @@
 from flask import Blueprint, make_response, jsonify
 from flask_restful import Api, Resource, reqparse
 from flask_jwt_extended import jwt_required
-from models import Session, db
+from models import Session, db,Year
 from serializer import session_schema
 from auth import admin_required
+from datetime import datetime
 
 sessions_bp = Blueprint('sessions_bp', __name__)
 api = Api(sessions_bp)
@@ -25,8 +26,21 @@ patch_args.add_argument('year_id', type=int)
 class SessionsDetails(Resource):
     @jwt_required()
     def get(self):
-        sessions = Session.query.all()
-        result = session_schema.dump(sessions)
+        current_year = datetime.now().year
+        
+        # Query sessions for the current year with joined Year
+        sessions = db.session.query(Session, Year).join(Year).filter(Year.year_name == current_year).all()
+        
+        # Format the result to include year_name and session_name
+        result = [{
+            "year_name": session[1].year_name,  # Access the Year data with index 1
+            "session_name": session[0].name,    # Access the Session data with index 0
+            "start_date": session[0].start_date,
+            "end_date": session[0].end_date
+        } for session in sessions]
+        
+        print(result)
+        
         return make_response(jsonify(result), 200)
 
     @admin_required()

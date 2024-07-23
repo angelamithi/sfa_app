@@ -73,9 +73,10 @@ def seed_database():
 
 # Seed data for Goals
         goal_data = [
-            {"user_id": users[0].id, "name": "Develop Marketing Strategy", "description": "Create a comprehensive marketing strategy for Q1", "session_id": sessions[0].id, "year_id": years[0].id},
-            {"user_id": users[1].id, "name": "Improve Sales Process", "description": "Enhance the sales process based on Q1 results", "session_id": sessions[1].id, "year_id": years[0].id}
-        ]
+    {"user_id": users[0].id, "name": "Develop Marketing Strategy", "description": "Create a comprehensive marketing strategy for Q1", "session_id": sessions[0].id, "year_id": years[0].id,"goal_status":"Achieved"},
+    {"user_id": users[1].id, "name": "Improve Sales Process", "description": "Enhance the sales process based on Q1 results", "session_id": sessions[0].id, "year_id": years[0].id,"goal_status":"Not Yet Achieved"}
+]
+
 
         # Create and add goals
         goals = []
@@ -89,9 +90,9 @@ def seed_database():
 
         # Seed data for Tasks
         task_data = [
-            {"name": "Task A", "description": "Description for Task A", "goals_id": goals[0].id, "start_date": datetime(2024, 7, 1), "end_date": datetime(2024, 7, 15), "year_id": years[0].id},
-            {"name": "Task B", "description": "Description for Task B", "goals_id": goals[1].id, "start_date": datetime(2024, 7, 5), "end_date": datetime(2024, 7, 20), "year_id": years[0].id},
-            {"name": "Task C", "description": "Description for Task C", "goals_id": goals[0].id, "start_date": datetime(2024, 7, 10), "end_date": datetime(2024, 7, 25), "year_id": years[0].id}
+            {"name": "Task A", "description": "Description for Task A", "goals_id": goals[0].id, "start_date": datetime(2024, 7, 1), "end_date": datetime(2024, 7, 15), "year_id": years[0].id,"task_status":"Ongoing"},
+            {"name": "Task B", "description": "Description for Task B", "goals_id": goals[1].id, "start_date": datetime(2024, 7, 5), "end_date": datetime(2024, 7, 20), "year_id": years[0].id,"task_status":"Ongoing"},
+            {"name": "Task C", "description": "Description for Task C", "goals_id": goals[0].id, "start_date": datetime(2024, 7, 10), "end_date": datetime(2024, 7, 25), "year_id": years[0].id,"task_status":"Ongoing"}
         ]
 
         tasks = []
@@ -121,8 +122,8 @@ def seed_database():
 
         # Seed data for Communities
         community_data = [
-            {"name": "Tech Innovators", "description": "A community of tech enthusiasts and innovators", "coordinator_id": users[0].id},
-            {"name": "Health Advocates", "description": "A community focused on health and wellness", "coordinator_id": users[3].id}
+            {"name": "Tech Innovators", "description": "A community of tech enthusiasts and innovators", "coordinator_id": users[0].id,"goal_id":goals[0].id,"task_id":tasks[0].id},
+            {"name": "Health Advocates", "description": "A community focused on health and wellness", "coordinator_id": users[3].id,"goal_id":goals[1].id,"task_id":tasks[1].id}
         ]
 
         communities = []

@@ -54,15 +54,57 @@ class TasksDetails(Resource):
 
 api.add_resource(TasksDetails, '/tasks')
 
-# Define Resource for a single Task by ID
 class TaskById(Resource):
     @jwt_required()
     def get(self, id):
         task = Tasks.query.get(id)
         if not task:
             return make_response(jsonify({"error": "Task not found"}), 404)
-        result = tasks_schema.dump(task)
+        
+        # Get the user who the task has been allocated to
+        allocated_users = [{
+            "user_id": ut.user.id,
+            "username": ut.user.username,
+            "first_name": ut.user.first_name,
+            "last_name": ut.user.last_name,
+            "email": ut.user.email,
+            "status": ut.status,
+            "assigned_at": ut.assigned_at
+        } for ut in task.user_tasks]
+        
+        # Get the community the task has been allocated to
+        communities = [{
+            "community_id": community.id,
+            "name": community.name,
+            "description": community.description
+        } for community in task.community_tasks] if task.community_tasks else None
+        
+        # Get the session details
+        session = None
+        if task.goals.session:
+            session = {
+                "session_id": task.goals.session.id,
+                "name": task.goals.session.name,
+                "start_date": task.goals.session.start_date,
+                "end_date": task.goals.session.end_date
+            }
+        
+        result = {
+            "task_id": task.id,
+            "name": task.name,
+            "description": task.description,
+            "start_date": task.start_date,
+            "end_date": task.end_date,
+            "task_status": task.task_status,
+            "allocated_users": allocated_users,
+            "communities": communities,
+            "session": session
+        }
+      
+      
+
         return make_response(jsonify(result), 200)
+
 
     @admin_required()
     def delete(self, id):

@@ -174,13 +174,7 @@ const AdminSidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
-             <Item
-              title="Tasks"
-              to="/tasks"
-              icon={<HelpOutlineOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
+            
              <Item
               title="Sessions"
               to="/sessions"

@@ -58,6 +58,8 @@ class Tasks(db.Model):
     start_date = db.Column(db.DateTime, nullable=False)
     end_date = db.Column(db.DateTime, nullable=False)
     volunteer_hours = db.relationship('VolunteerHour', backref='task')
+    task_status=db.Column(db.String(30), nullable=False)
+    community_tasks = db.relationship('Community', backref="task")
 
    
     @hybrid_property
@@ -71,6 +73,8 @@ class Community(db.Model):
     description = db.Column(db.String(255))
     events = db.relationship('Event', backref='community', lazy=True)
     coordinator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    goal_id = db.Column(db.Integer, db.ForeignKey('goals.id'))
+    task_id=db.Column(db.Integer, db.ForeignKey('tasks.id'))
     coordinator = db.relationship('User', backref='coordinated_communities', lazy=True)
     members = db.relationship('UserCommunity', back_populates='community')
 
@@ -182,6 +186,9 @@ class Goals(db.Model):
     session_id = db.Column(db.String, db.ForeignKey('sessions.id'), nullable=False)
     year_id = db.Column(db.Integer, db.ForeignKey('years.id'))
     tasks = db.relationship('Tasks', backref="goals")
+    community_goals = db.relationship('Community', backref="goals")
+ 
+    goal_status=db.Column(db.String, nullable=False)
 
 
 

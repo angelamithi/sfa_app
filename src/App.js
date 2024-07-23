@@ -17,6 +17,11 @@ import ViewSingleCommunityDetails from "./components/ViewSingleCommunityDetails"
 import ViewSingleEventDetail from "./components/ViewSingleEventDetail";
 import ViewSinglePollDetails from "./components/ViewSinglePollDetails";
 import ViewSingleSurveyDetails from "./components/ViewSingleSurveyDetails";
+import ViewGoalsDetails from "./components/ViewGoalsDetails";
+import ViewSingleGoalDetails from "./components/ViewSingleGoalDetails";
+import ViewSingleTaskDetails from "./components/ViewTaskDetails";
+import ViewSessionDetails from "./components/ViewSessionDetails";
+
 import Invoices from "./scenes/invoices";
 import Contacts from "./scenes/contacts";
 import Bar from "./scenes/bar";
@@ -91,6 +96,10 @@ function App() {
                   <Route path="/polls/:id" element={<ViewSinglePollDetails/>} />
                   <Route path="/surveys" element={<ViewSurveyDetails />} />
                   <Route path="/surveys/:id" element={<ViewSingleSurveyDetails />} />
+                  <Route path="/goals" element={<ViewGoalsDetails/>} />
+                  <Route path="/goals/:id" element={<ViewSingleGoalDetails />} />
+                  <Route path="/tasks/:taskId" element={<ViewSingleTaskDetails />} />
+                  <Route path="/sessions" element={<ViewSessionDetails/>} />
                  
                   
                   <Route path="/contacts" element={<Contacts />} />
