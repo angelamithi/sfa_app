@@ -29,6 +29,7 @@ from routes.user_tasks_bp import user_task_bp
 from routes.sessions_bp import sessions_bp
 from routes.year_bp import years_bp
 from flask_mail import Mail
+from routes.calendar_bp import calendar_bp
 
 # Initialize Flask components
 bcrypt = Bcrypt()
@@ -85,6 +86,8 @@ def create_app():
     app.register_blueprint(tasks_bp)
     app.register_blueprint(sessions_bp)
     app.register_blueprint(years_bp)
+    app.register_blueprint(calendar_bp)
+
 
 
 

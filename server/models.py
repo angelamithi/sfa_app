@@ -102,6 +102,7 @@ class Event(db.Model):
     report = db.relationship('Report', uselist=False, backref='event')
     volunteer_hours = db.relationship('VolunteerHour', backref='event', lazy=True)
     tasks = db.relationship('Tasks', backref='event', lazy=True)
+    calendar_event_id = db.Column(db.String, nullable=True)
 
 
 class Poll(db.Model):
