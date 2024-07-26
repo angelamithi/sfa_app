@@ -95,9 +95,9 @@ class EventDetails(Resource):
         new_event = Event(
             title=data['title'],
             description=data.get('description'),
-            event_date=datetime.datetime.combine(event_date, datetime.time.min),
-            start_time=datetime.datetime.combine(datetime.date.today(), start_time),
-            end_time=datetime.datetime.combine(datetime.date.today(), end_time),
+            event_date=event_date,
+            start_time=start_time,
+            end_time=end_time,
             zoom_link=data.get('zoom_link'),
             community_id=data['community_id'],
             coordinator_id=data['coordinator_id']
@@ -115,7 +115,7 @@ class EventDetails(Resource):
 
         event = {
             'summary': data['title'],
-            'description': data.get('description'),
+            'description': data.get('description') + '\n\nZoom Link: ' + data.get('zoom_link'),  # Add the Zoom link to the description
             'start': {
                 'dateTime': start_datetime,
                 'timeZone': 'UTC',
@@ -131,33 +131,27 @@ class EventDetails(Resource):
                     {'method': 'popup', 'minutes': 10},
                 ],
             },
-            'conferenceData': {
-                'createRequest': {
-                    'requestId': 'some-random-string',
-                    'conferenceSolutionKey': {'type': 'hangoutsMeet'}
-                }
-            },
             'attendees': [{'email': email} for email in user_emails],  # Add attendees
-            'colorId': '6' 
+            'colorId': '6'
         }
 
-        created_event = service.events().insert(calendarId='primary', body=event, conferenceDataVersion=1).execute()
-        
+        created_event = service.events().insert(calendarId='primary', body=event).execute()
+
         # Store the Google Calendar event ID
         new_event.calendar_event_id = created_event['id']
         db.session.commit()
 
-        print('Event created:', created_event.get('htmlLink'))
-        print('Event created:', created_event)
-        if 'error' in created_event:
-            print('API Error:', created_event['error'])
-
+        # Return only the time part for start_time and end_time
         result = event_schema.dump(new_event)
+        result['start_time'] = new_event.start_time.isoformat()
+        result['end_time'] = new_event.end_time.isoformat()
         return make_response(jsonify(result), 201)
 
 
-
 api.add_resource(EventDetails, '/events')
+
+
+
 
 
 class EventById(Resource):
@@ -196,7 +190,7 @@ class EventById(Resource):
             } if report else None,
         }
 
-        print("Event fetched:", event_data)
+        # print("Event fetched:", event_data)
         return make_response(jsonify(event_data), 200)
 
     @admin_required()
@@ -234,7 +228,7 @@ class EventById(Resource):
 
             calendar_event = {
                 'summary': event.title,
-                'description': event.description,
+                'description': event.description + '\n\nZoom Link: ' + event.zoom_link,  # Add the Zoom link to the description
                 'start': {
                     'dateTime': start_datetime,
                     'timeZone': 'UTC',
@@ -250,12 +244,6 @@ class EventById(Resource):
                         {'method': 'popup', 'minutes': 10},
                     ],
                 },
-                'conferenceData': {
-                    'createRequest': {
-                        'requestId': 'some-random-string',
-                        'conferenceSolutionKey': {'type': 'hangoutsMeet'}
-                    }
-                },
                 'attendees': [{'email': email} for email in User.query.with_entities(User.email).all()],  # Add attendees
                 'colorId': '6'
             }
@@ -264,8 +252,7 @@ class EventById(Resource):
                 updated_event = service.events().update(
                     calendarId='primary',
                     eventId=event.calendar_event_id,
-                    body=calendar_event,
-                    conferenceDataVersion=1
+                    body=calendar_event
                 ).execute()
                 print('Event updated in Google Calendar:', updated_event.get('htmlLink'))
             except Exception as e:
@@ -273,6 +260,7 @@ class EventById(Resource):
 
         print("Event updated:", event_schema.dump(event))
         return make_response(jsonify(event_schema.dump(event)), 200)
+
 
     @admin_required()
     def delete(self, id):
@@ -295,6 +283,7 @@ class EventById(Resource):
 
         print("Event deleted")
         return make_response(jsonify({"message": "Event deleted"}), 200)
+
 
 
 api.add_resource(EventById, '/events/<int:id>')
