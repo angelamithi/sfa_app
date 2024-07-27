@@ -41,6 +41,7 @@ const AddUser = ({ users = [], setUsers }) => {
         if (!resp.ok) {
           return resp.json().then(err => {
             setError(err.error || 'Error adding user. Please try again.');
+            setMessage(''); // Clear previous success message
             throw new Error(err.error || 'Error adding user. Please try again.');
           });
         }

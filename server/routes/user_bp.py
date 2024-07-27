@@ -42,11 +42,11 @@ class UserDetails(Resource):
         # Check if the user already exists
         existing_user = User.query.filter_by(username=data['username']).first()
         if existing_user:
-            return jsonify({"error": "User with this username already exists"})
+            return make_response(jsonify({"error": "User with this username already exists"}), 400)
         
         existing_user = User.query.filter_by(email=data['email']).first()
         if existing_user:
-            return jsonify({"error": "User with this email address already exists"})
+            return make_response(jsonify({"error": "User with this email address already exists"}), 400)
         
         # Set default password if not provided
         default_password = 'default123'
@@ -68,7 +68,7 @@ class UserDetails(Resource):
         db.session.commit()
 
         result = user_schema.dump(new_user)
-        return jsonify(result)
+        return make_response(jsonify(result), 201)  # Return 201 for successful creation
 
 api.add_resource(UserDetails, '/users')
 
