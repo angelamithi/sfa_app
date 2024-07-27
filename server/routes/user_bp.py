@@ -16,7 +16,6 @@ post_args.add_argument('email', type=str, required=True, help='Email is required
 post_args.add_argument('first_name', type=str, required=True, help='First Name is required')
 post_args.add_argument('last_name', type=str, required=True, help='Last Name is required')
 post_args.add_argument('phone_number', type=str)
-post_args.add_argument('password', type=str, required=True, help='Password is required')
 post_args.add_argument('role', type=str, required=True, help='Role is required')
 
 patch_args = reqparse.RequestParser()
@@ -44,11 +43,17 @@ class UserDetails(Resource):
         existing_user = User.query.filter_by(username=data['username']).first()
         if existing_user:
             return make_response(jsonify({"error": "User with this username already exists"}), 409)
-          # Check if the user already exists
+        
         existing_user = User.query.filter_by(email=data['email']).first()
         if existing_user:
             return make_response(jsonify({"error": "User with this email address already exists"}), 409)
-        hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+        
+        # Set default password if not provided
+        default_password = 'default123'
+        password = data.get('password', default_password)
+        
+        hashed_password = bcrypt.generate_password_hash(password)
+
         new_user = User(
             username=data['username'],
             email=data['email'],
@@ -58,10 +63,10 @@ class UserDetails(Resource):
             password=hashed_password,
             role=data['role']
         )
+        
         db.session.add(new_user)
         db.session.commit()
 
-       
         result = user_schema.dump(new_user)
         return make_response(jsonify(result), 201)
 

@@ -21,6 +21,7 @@ import ViewGoalsDetails from "./components/ViewGoalsDetails";
 import ViewSingleGoalDetails from "./components/ViewSingleGoalDetails";
 import ViewSingleTaskDetails from "./components/ViewTaskDetails";
 import ViewSessionDetails from "./components/ViewSessionDetails";
+import AddUser from "./components/AddUser";
 
 import Invoices from "./scenes/invoices";
 import Contacts from "./scenes/contacts";
@@ -104,6 +105,7 @@ function App() {
                   <Route path="/sessions" element={<ViewSessionDetails/>} />
                   <Route path="/manage_team" element={<ManageTeam/>} />
                   <Route path="/edit_user/:id" element={<EditUser/>} />
+                  <Route path="/add_user" element={<AddUser/>} />
                  
                   
                   <Route path="/contacts" element={<Contacts />} />

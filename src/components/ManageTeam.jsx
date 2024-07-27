@@ -31,15 +31,15 @@ const ManageTeam = () => {
   };
 
   const handleCreateUserClick = () => {
-    navigate('/create-user');
+    navigate('/add_user');
   };
 
   const handleAssignCommunityClick = () => {
-    navigate('/assign-community');
+    navigate('/assign_community');
   };
 
   const handleAssignTaskClick = () => {
-    navigate('/assign-task');
+    navigate('/assign_task');
   };
 
   return (
