@@ -37,6 +37,8 @@ import Login from "./components/Login";
 import ChangePassword from "./components/ChangePassword";
 import ResetPassword from "./components/ResetPassword";
 import ForgotPassword from "./components/ForgotPassword";
+import ManageTeam from "./components/ManageTeam";
+import EditUser from "./components/EditUser";
 
 function App() {
   const [theme, colorMode] = useMode();
@@ -100,6 +102,8 @@ function App() {
                   <Route path="/goals/:id" element={<ViewSingleGoalDetails />} />
                   <Route path="/tasks/:taskId" element={<ViewSingleTaskDetails />} />
                   <Route path="/sessions" element={<ViewSessionDetails/>} />
+                  <Route path="/manage_team" element={<ManageTeam/>} />
+                  <Route path="/edit_user/:id" element={<EditUser/>} />
                  
                   
                   <Route path="/contacts" element={<Contacts />} />
