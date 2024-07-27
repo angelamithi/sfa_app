@@ -42,17 +42,17 @@ class UserDetails(Resource):
         # Check if the user already exists
         existing_user = User.query.filter_by(username=data['username']).first()
         if existing_user:
-            return make_response(jsonify({"error": "User with this username already exists"}), 409)
+            return jsonify({"error": "User with this username already exists"})
         
         existing_user = User.query.filter_by(email=data['email']).first()
         if existing_user:
-            return make_response(jsonify({"error": "User with this email address already exists"}), 409)
+            return jsonify({"error": "User with this email address already exists"})
         
         # Set default password if not provided
         default_password = 'default123'
         password = data.get('password', default_password)
         
-        hashed_password = bcrypt.generate_password_hash(password)
+        hashed_password =bcrypt.generate_password_hash(password)
 
         new_user = User(
             username=data['username'],
@@ -68,10 +68,9 @@ class UserDetails(Resource):
         db.session.commit()
 
         result = user_schema.dump(new_user)
-        return make_response(jsonify(result), 201)
+        return jsonify(result)
 
 api.add_resource(UserDetails, '/users')
-
 
 
 class UserById(Resource):
