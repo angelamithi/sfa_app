@@ -2,8 +2,9 @@ from flask import Blueprint, make_response, jsonify
 from flask_marshmallow import Marshmallow
 from flask_restful import Api, Resource, abort, reqparse
 from flask_bcrypt import Bcrypt
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field, fields
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
 from marshmallow.fields import Nested
+from marshmallow import fields
 from models import TokenBlocklist,db,User,Community,UserCommunity,Event,Survey,SurveyResponse,Poll,PollResponse,VolunteerHour,Transcription,Report,Goals,Tasks,UserTask,Session,Year
 
 serializer_bp = Blueprint('serializer_bp', __name__)
@@ -30,11 +31,11 @@ community_schema = CommunitySchema()
 class UserCommunitySchema(SQLAlchemyAutoSchema):
     class Meta:
         model = UserCommunity
-        include_fk = True
+        load_instance = True
+    user_id = fields.Int(required=True)
+    community_id = fields.Int(required=True)
 
 user_community_schema = UserCommunitySchema()
-
-
 
 
 

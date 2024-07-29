@@ -25,9 +25,12 @@ const ManageTeam = () => {
     navigate(`/edit_user/${id}`);
   };
 
-  const handleDeleteClick = (id) => {
-    // Add logic to delete the user
-    console.log(`Delete user with id: ${id}`);
+  const handleDeactivateClick = (id) => {
+    navigate(`/deactivate_user/${id}`);
+  };
+
+  const handleReactivateClick = (id) => {
+    navigate(`/reactivate_user/${id}`);
   };
 
   const handleCreateUserClick = () => {
@@ -62,6 +65,7 @@ const ManageTeam = () => {
             <th>Last Name</th>
             <th>Phone Number</th>
             <th>Role</th>
+            <th>Active</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -75,9 +79,14 @@ const ManageTeam = () => {
               <td onClick={() => handleRowClick(user.id)}>{user.last_name}</td>
               <td onClick={() => handleRowClick(user.id)}>{user.phone_number}</td>
               <td onClick={() => handleRowClick(user.id)}>{user.role}</td>
+              <td onClick={() => handleRowClick(user.id)}>{user.active_status ? 'Yes' : 'No'}</td>
               <td>
                 <button onClick={() => handleEditClick(user.id)}>Edit</button>
-                <button onClick={() => handleDeleteClick(user.id)}>Deactivate</button>
+                {user.active_status ? (
+                  <button onClick={() => handleDeactivateClick(user.id)}>Deactivate</button>
+                ) : (
+                  <button onClick={() => handleReactivateClick(user.id)}>Reactivate</button>
+                )}
               </td>
             </tr>
           ))}

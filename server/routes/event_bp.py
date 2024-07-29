@@ -105,9 +105,9 @@ class EventDetails(Resource):
         db.session.add(new_event)
         db.session.commit()
 
-        # Fetch all users from the database
-        users = User.query.all()
-        user_emails = [user.email for user in users]
+        # Fetch all users with active status from the database
+        active_users = User.query.filter_by(active_status=True).all()
+        user_emails = [user.email for user in active_users]
 
         # Create event in Google Calendar
         start_datetime = datetime.datetime.combine(event_date, start_time).isoformat()
@@ -149,10 +149,6 @@ class EventDetails(Resource):
 
 
 api.add_resource(EventDetails, '/events')
-
-
-
-
 
 class EventById(Resource):
     @jwt_required()
@@ -244,23 +240,25 @@ class EventById(Resource):
                         {'method': 'popup', 'minutes': 10},
                     ],
                 },
-                'attendees': [{'email': email} for email in User.query.with_entities(User.email).all()],  # Add attendees
                 'colorId': '6'
             }
 
-            try:
-                updated_event = service.events().update(
-                    calendarId='primary',
-                    eventId=event.calendar_event_id,
-                    body=calendar_event
-                ).execute()
-                print('Event updated in Google Calendar:', updated_event.get('htmlLink'))
-            except Exception as e:
-                print('Failed to update event in Google Calendar:', e)
+            updated_event = service.events().update(
+                calendarId='primary', eventId=event.calendar_event_id, body=calendar_event).execute()
 
-        print("Event updated:", event_schema.dump(event))
-        return make_response(jsonify(event_schema.dump(event)), 200)
+        # Fetch all users with active status from the database
+        active_users = User.query.filter_by(active_status=True).all()
+        user_emails = [user.email for user in active_users]
 
+        # Add attendees to the updated event
+        updated_event['attendees'] = [{'email': email} for email in user_emails]
+        service.events().update(calendarId='primary', eventId=event.calendar_event_id, body=updated_event).execute()
+
+        # Return only the time part for start_time and end_time
+        result = event_schema.dump(event)
+        result['start_time'] = event.start_time.isoformat()
+        result['end_time'] = event.end_time.isoformat()
+        return make_response(jsonify(result), 200)
 
     @admin_required()
     def delete(self, id):
@@ -269,21 +267,12 @@ class EventById(Resource):
             print("Event not found")
             return make_response(jsonify({"error": "Event not found"}), 404)
 
-        # Delete the event from Google Calendar
+        # Delete event from Google Calendar if the calendar_event_id exists
         if event.calendar_event_id:
-            try:
-                service.events().delete(calendarId='primary', eventId=event.calendar_event_id).execute()
-                print("Google Calendar event deleted")
-            except Exception as e:
-                print("Failed to delete event from Google Calendar:", e)
+            service.events().delete(calendarId='primary', eventId=event.calendar_event_id).execute()
 
-        # Delete the event from the database
         db.session.delete(event)
         db.session.commit()
-
-        print("Event deleted")
-        return make_response(jsonify({"message": "Event deleted"}), 200)
-
-
+        return make_response(jsonify({"message": "Event deleted successfully"}), 200)
 
 api.add_resource(EventById, '/events/<int:id>')

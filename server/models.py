@@ -33,6 +33,7 @@ class User(db.Model):
     phone_number = db.Column(db.String)
     password = db.Column(db.String(128), nullable=False)
     role = db.Column(db.String(50), nullable=False)
+    active_status = db.Column(db.Boolean, default=True, nullable=False) 
     volunteer_hours = db.relationship('VolunteerHour', backref='user', lazy=True, foreign_keys='VolunteerHour.user_id')
     approved_volunteer_hours = db.relationship('VolunteerHour', backref='approved_by_user', lazy=True, foreign_keys='VolunteerHour.approved_by')
     events = db.relationship('Event', backref='user', lazy=True)

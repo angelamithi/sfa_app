@@ -208,7 +208,7 @@ const AdminSidebar = () => {
             />
              <Item
               title="Manage Community"
-              to="/manage_community"
+              to="/user_communities"
               icon={<PersonOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}

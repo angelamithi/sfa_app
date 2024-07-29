@@ -22,7 +22,9 @@ import ViewSingleGoalDetails from "./components/ViewSingleGoalDetails";
 import ViewSingleTaskDetails from "./components/ViewTaskDetails";
 import ViewSessionDetails from "./components/ViewSessionDetails";
 import AddUser from "./components/AddUser";
-
+import DeactivateUser from "./components/DeactivateUser";
+import ReactivateUser from "./components/ReactivateUser";
+import UserCommunitiesManager from "./components/UserCommunitiesManager";
 import Invoices from "./scenes/invoices";
 import Contacts from "./scenes/contacts";
 import Bar from "./scenes/bar";
@@ -106,6 +108,12 @@ function App() {
                   <Route path="/manage_team" element={<ManageTeam/>} />
                   <Route path="/edit_user/:id" element={<EditUser/>} />
                   <Route path="/add_user" element={<AddUser/>} />
+                  <Route path="/deactivate_user/:id" element={<DeactivateUser />} />
+                  <Route path="/reactivate_user/:id" element={<ReactivateUser/>} />
+                  <Route path="/assign_community" element={<UserCommunitiesManager />} />
+        {/* <Route path="/assign_user_community" element={<AssignUserCommunity />} />
+        <Route path="/edit_user_community/:userId/:communityId" element={<EditUserCommunity />} /> */}
+
                  
                   
                   <Route path="/contacts" element={<Contacts />} />

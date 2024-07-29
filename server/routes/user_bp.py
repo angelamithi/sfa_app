@@ -115,19 +115,68 @@ class UserById(Resource):
 
     @admin_required()  
     def patch(self, id):
+        data = patch_args.parse_args()
+
         user = User.query.get(id)
         if not user:
             return make_response(jsonify({"error": "User not found"}), 404)
 
-        data = patch_args.parse_args()
-        for key, value in data.items():
-            if value is not None:
-                setattr(user, key, value)
+        # Check for uniqueness of updated username and email
+        if data.get('username') and data['username'] != user.username:
+            existing_user = User.query.filter_by(username=data['username']).first()
+            if existing_user:
+                return make_response(jsonify({"error": "User with this username already exists"}), 400)
+        
+        if data.get('email') and data['email'] != user.email:
+            existing_user = User.query.filter_by(email=data['email']).first()
+            if existing_user:
+                return make_response(jsonify({"error": "User with this email address already exists"}), 400)
 
+        if data['username']:
+            user.username = data['username']
+        if data['email']:
+            user.email = data['email']
+        if data['first_name']:
+            user.first_name = data['first_name']
+        if data['last_name']:
+            user.last_name = data['last_name']
+        if data['phone_number']:
+            user.phone_number = data['phone_number']
+        if data['role']:
+            user.role = data['role']
+      
         db.session.commit()
-     
+
+        result = user_schema.dump(user)
+        return make_response(jsonify(result), 200)
+api.add_resource(UserById, '/users/<int:id>')
+
+class DeactivateUser(Resource):
+    @admin_required()
+    def patch(self, id):
+        user = User.query.get(id)
+        if not user:
+            return make_response(jsonify({"error": "User not found"}), 404)
+
+        user.active_status = False
+        db.session.commit()
+
         result = user_schema.dump(user)
         return make_response(jsonify(result), 200)
 
-api.add_resource(UserById, '/users/<int:id>')
+api.add_resource(DeactivateUser, '/users_deactivate/<int:id>')
 
+class ReactivateUser(Resource):
+    @admin_required()
+    def patch(self, id):
+        user = User.query.get(id)
+        if not user:
+            return make_response(jsonify({"error": "User not found"}), 404)
+
+        user.active_status = True
+        db.session.commit()
+
+        result = user_schema.dump(user)
+        return make_response(jsonify(result), 200)
+
+api.add_resource(ReactivateUser, '/users_reactivate/<int:id>')

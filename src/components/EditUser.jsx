@@ -10,8 +10,8 @@ const EditUser = () => {
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [role, setRole] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -39,12 +39,13 @@ const EditUser = () => {
       })
       .catch((error) => {
         console.error('Error fetching user:', error);
+        setError('Failed to fetch user details. Please try again.');
       });
   }, [id]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setErrorMessage(''); // Clear previous error message
+    setError(''); // Clear previous error message
 
     const updatedUser = {
       username,
@@ -65,21 +66,31 @@ const EditUser = () => {
     })
       .then((resp) => {
         if (!resp.ok) {
-          throw new Error('Failed to update user');
+          return resp.json().then(err => {
+            setError(err.error || 'Failed to update user. Please try again.');
+            setMessage(''); // Clear previous success message
+            throw new Error(err.error || 'Failed to update user. Please try again.');
+          });
         }
         return resp.json();
       })
       .then((updatedData) => {
         console.log('Updated User:', updatedData);
-        setSuccessMessage('User details have been updated successfully!');
+        setMessage('User details have been updated successfully!');
         setTimeout(() => {
           navigate("/manage_team"); // Redirect to ManageTeam after a few seconds
         }, 3000); // Wait for 3 seconds before redirecting
       })
       .catch((error) => {
         console.error('Error updating user:', error);
-        setErrorMessage('Failed to update user. Please try again.');
+        setError('Failed to update user. Please try again.');
       });
+  };
+
+  // Reset error message when the user starts typing again
+  const handleInputChange = (setter) => (e) => {
+    setter(e.target.value);
+    if (error) setError(''); // Clear error when user starts fixing it
   };
 
   return (
@@ -90,37 +101,37 @@ const EditUser = () => {
           <div className="eight wide field">
             <label>
               Username:
-              <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} required />
+              <input type="text" value={username} onChange={handleInputChange(setUsername)} required />
             </label>
           </div>
           <div className="eight wide field">
             <label>
               Email:
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <input type="email" value={email} onChange={handleInputChange(setEmail)} required />
             </label>
           </div>
           <div className="eight wide field">
             <label>
               First Name:
-              <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+              <input type="text" value={firstName} onChange={handleInputChange(setFirstName)} required />
             </label>
           </div>
           <div className="eight wide field">
             <label>
               Last Name:
-              <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+              <input type="text" value={lastName} onChange={handleInputChange(setLastName)} required />
             </label>
           </div>
           <div className="eight wide field">
             <label>
               Phone Number:
-              <input type="text" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
+              <input type="text" value={phoneNumber} onChange={handleInputChange(setPhoneNumber)} />
             </label>
           </div>
           <div className="eight wide field">
             <label>
               Role:
-              <select value={role} onChange={(e) => setRole(e.target.value)} required>
+              <select value={role} onChange={handleInputChange(setRole)} required>
                 <option value="" disabled>Select Role</option>
                 <option value="Administrator">Administrator</option>
                 <option value="Coordinator">Coordinator</option>
@@ -133,8 +144,8 @@ const EditUser = () => {
           <br />
           <button type="submit" className='ui teal button' style={{ width: "200px", marginLeft: "110px", marginTop: "20px" }}>Update User</button>
         </form>
-        {successMessage && <div style={{ color: 'green', marginTop: '20px' }}>{successMessage}</div>}
-        {errorMessage && <div style={{ color: 'red', marginTop: '20px' }}>{errorMessage}</div>}
+        {message && <div className="ui positive message" style={{ marginTop: "20px" }}>{message}</div>}
+        {error && <div className="ui negative message" style={{ marginTop: "20px" }}>{error}</div>}
       </div>
     </div>
   );
