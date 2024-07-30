@@ -73,8 +73,8 @@ def seed_database():
 
 # Seed data for Goals
         goal_data = [
-    {"user_id": users[0].id, "name": "Develop Marketing Strategy", "description": "Create a comprehensive marketing strategy for Q1", "session_id": sessions[0].id, "year_id": years[0].id,"goal_status":"Achieved"},
-    {"user_id": users[1].id, "name": "Improve Sales Process", "description": "Enhance the sales process based on Q1 results", "session_id": sessions[0].id, "year_id": years[0].id,"goal_status":"Not Yet Achieved"}
+    {"name": "Develop Marketing Strategy", "description": "Create a comprehensive marketing strategy for Q1", "session_id": sessions[0].id, "year_id": years[0].id,"goal_status":"Achieved"},
+    {"name": "Improve Sales Process", "description": "Enhance the sales process based on Q1 results", "session_id": sessions[0].id, "year_id": years[0].id,"goal_status":"Not Yet Achieved"}
 ]
 
 

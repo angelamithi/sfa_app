@@ -41,8 +41,8 @@ const ManageTeam = () => {
     navigate('/assign_community');
   };
 
-  const handleAssignTaskClick = () => {
-    navigate('/assign_task');
+  const handleAssignGoalClick = () => {
+    navigate('/assign_goal');
   };
 
   return (
@@ -52,7 +52,7 @@ const ManageTeam = () => {
         <div>
           <button onClick={handleCreateUserClick}>Create User</button>
           <button onClick={handleAssignCommunityClick}>Assign Community</button>
-          <button onClick={handleAssignTaskClick}>Assign Task</button>
+          <button onClick={handleAssignGoalClick}>Assign Goal</button>
         </div>
       </div>
       <table className='ui striped table' style={{ width: "1200px", marginLeft: "60px", marginBottom: "20px" }}>

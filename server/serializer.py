@@ -2,10 +2,9 @@ from flask import Blueprint, make_response, jsonify
 from flask_marshmallow import Marshmallow
 from flask_restful import Api, Resource, abort, reqparse
 from flask_bcrypt import Bcrypt
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field, fields
 from marshmallow.fields import Nested
-from marshmallow import fields
-from models import TokenBlocklist,db,User,Community,UserCommunity,Event,Survey,SurveyResponse,Poll,PollResponse,VolunteerHour,Transcription,Report,Goals,Tasks,UserTask,Session,Year
+from models import TokenBlocklist,db,User,Community,UserCommunity,Event,Survey,SurveyResponse,Poll,PollResponse,VolunteerHour,Transcription,Report,Goals,Tasks,UserTask,Session,Year,UserGoals
 
 serializer_bp = Blueprint('serializer_bp', __name__)
 ma = Marshmallow(serializer_bp)
@@ -31,11 +30,11 @@ community_schema = CommunitySchema()
 class UserCommunitySchema(SQLAlchemyAutoSchema):
     class Meta:
         model = UserCommunity
-        load_instance = True
-    user_id = fields.Int(required=True)
-    community_id = fields.Int(required=True)
+        include_fk = True
 
 user_community_schema = UserCommunitySchema()
+
+
 
 
 
@@ -124,6 +123,13 @@ class UserTasksSchema(SQLAlchemyAutoSchema):
         include_fk = True
 
 user_task_schema = TaskSchema()
+
+class UserGoalsSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model =UserGoals
+        include_fk = True
+
+user_goals_schema = UserGoalsSchema()
 
 class SessionSchema(SQLAlchemyAutoSchema):
     class Meta:

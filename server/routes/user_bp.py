@@ -1,11 +1,12 @@
-from flask import Blueprint, make_response, jsonify
+from flask import Blueprint, make_response, jsonify,request
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from flask_restful import Api, Resource, reqparse
 from flask_jwt_extended import jwt_required
-from models import User, db,UserCommunity,VolunteerHour,Event
-from serializer import user_schema ,community_schema,event_schema,volunteer_hour_schema
+from models import User, db,UserCommunity,VolunteerHour,Event,Goals,Year,Session,Community,UserGoals
+from serializer import user_schema ,community_schema,event_schema,volunteer_hour_schema,user_goals_schema
 from auth import admin_required
 from flask_bcrypt import Bcrypt
+from datetime import datetime
 
 user_bp = Blueprint('user_bp', __name__)
 api = Api(user_bp)
@@ -180,3 +181,93 @@ class ReactivateUser(Resource):
         return make_response(jsonify(result), 200)
 
 api.add_resource(ReactivateUser, '/users_reactivate/<int:id>')
+
+
+
+class AssignGoal(Resource):
+    @jwt_required()  # Ensure this route is protected by JWT authentication
+    def post(self):
+        data = request.get_json()
+        user_ids = data.get('user_ids')
+        goal_id = data.get('goal_id')
+
+        if not user_ids or not goal_id:
+            return {'error': 'User IDs and Goal ID are required.'}, 400
+
+        # Find the goal by ID
+        goal = Goals.query.get(goal_id)
+        if not goal:
+            return {'error': f'Goal with ID {goal_id} not found.'}, 404
+
+        already_assigned = []
+        not_found_users = []
+
+        for user_id in user_ids:
+            user = User.query.get(user_id)
+            if not user:
+                not_found_users.append(user_id)
+                continue
+
+            existing_assignment = UserGoals.query.filter_by(user_id=user_id, goal_id=goal_id).first()
+            if existing_assignment:
+                already_assigned.append({'user_id': user_id, 'user_name': user.username})
+            else:
+                # Assign the goal to the user
+                new_assignment = UserGoals(user_id=user_id, goal_id=goal_id)
+                db.session.add(new_assignment)
+                db.session.commit()
+
+        return {
+            'message': 'Goals successfully assigned!',
+            'already_assigned': already_assigned,
+            'not_found_users': not_found_users
+        }, 200
+api.add_resource(AssignGoal, '/assign_goal')
+
+
+class GoalsAssignmentDetails(Resource):
+    @jwt_required()
+    def get(self):
+        current_year = datetime.utcnow().year
+        year = Year.query.filter_by(year_name=current_year).first()
+
+        if not year:
+            return make_response(jsonify({"message": "No goals found for the current year"}), 404)
+
+        # Retrieve goals associated with the current year
+        goals = Goals.query.filter(Goals.year_id == year.id).all()
+
+        if not goals:
+            return make_response(jsonify({"message": "No goals found for the current year"}), 404)
+
+        # Format the result to include goal IDs and names
+        result = {"goals": [{"id": goal.id, "name": goal.name} for goal in goals]}
+
+        return make_response(jsonify(result), 200)
+
+
+api.add_resource(GoalsAssignmentDetails, '/fetching_goals')
+
+
+class UserGoalsDetails(Resource):
+    @jwt_required()
+    def get(self):
+        user_goals = db.session.query(UserGoals, User.username, User.first_name, User.last_name, Goals.name).join(User).join(Goals).all()
+        
+        result = []
+        for user_goal in user_goals:
+            user_goal_data = {
+                'user_id': user_goal.User.id,
+                'username': user_goal.username,
+                'first_name': user_goal.first_name,
+                'last_name': user_goal.last_name,
+                'goal_id': user_goal.Goals.id,
+                'goal_name': user_goal.Goals.name,
+                'assigned_at': user_goal.UserGoals.assigned_at
+            }
+            result.append(user_goal_data)
+        
+        return make_response(jsonify(result), 200)
+
+# Add the resource to the API
+api.add_resource(UserGoalsDetails, '/user_goals')

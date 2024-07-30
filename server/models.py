@@ -43,8 +43,9 @@ class User(db.Model):
     survey_responses = db.relationship('SurveyResponse', backref='user', lazy=True)
     owned_reports = db.relationship('Report', backref='owner', lazy=True)
     communities = db.relationship('UserCommunity', back_populates='user')
-    goals = db.relationship('Goals', backref="user")
     user_tasks = db.relationship('UserTask', back_populates='user')
+    goals = db.relationship('UserGoals', back_populates='user')
+  
 
 class Tasks(db.Model):
     __tablename__ = 'tasks'
@@ -182,17 +183,25 @@ class Session(db.Model):
 class Goals(db.Model):
     __tablename__ = 'goals'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
+    
     name = db.Column(db.String(30), nullable=False)
     description = db.Column(db.String, nullable=False)
     session_id = db.Column(db.String, db.ForeignKey('sessions.id'), nullable=False)
     year_id = db.Column(db.Integer, db.ForeignKey('years.id'))
     tasks = db.relationship('Tasks', backref="goals")
     community_goals = db.relationship('Community', backref="goals")
+    users = db.relationship('User', backref="goals")
  
     goal_status=db.Column(db.String, nullable=False)
-
-
+    users = db.relationship('UserGoals', back_populates='goal')  
+   
+class UserGoals(db.Model):
+    __tablename__ = 'user_goals'
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    goal_id = db.Column(db.Integer, db.ForeignKey('goals.id'), primary_key=True)
+    assigned_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user = db.relationship('User', back_populates='goals')
+    goal = db.relationship('Goals', back_populates='users')
 
 class Year(db.Model):
     __tablename__ = "years"

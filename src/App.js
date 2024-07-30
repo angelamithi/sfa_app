@@ -25,6 +25,7 @@ import AddUser from "./components/AddUser";
 import DeactivateUser from "./components/DeactivateUser";
 import ReactivateUser from "./components/ReactivateUser";
 import UserCommunitiesManager from "./components/UserCommunitiesManager";
+import UserGoalsManager from "./components/UserGoalsManager";
 import Invoices from "./scenes/invoices";
 import Contacts from "./scenes/contacts";
 import Bar from "./scenes/bar";
@@ -111,6 +112,7 @@ function App() {
                   <Route path="/deactivate_user/:id" element={<DeactivateUser />} />
                   <Route path="/reactivate_user/:id" element={<ReactivateUser/>} />
                   <Route path="/assign_community" element={<UserCommunitiesManager />} />
+                  <Route path="/assign_goal" element={<UserGoalsManager />} />
         {/* <Route path="/assign_user_community" element={<AssignUserCommunity />} />
         <Route path="/edit_user_community/:userId/:communityId" element={<EditUserCommunity />} /> */}
 

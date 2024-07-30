@@ -17,26 +17,35 @@ patch_args.add_argument('user_id', type=int)
 patch_args.add_argument('community_id', type=int)
 
 class UserCommunityDetails(Resource):
+
     @jwt_required()
     def get(self):
-        user_communities = UserCommunity.query.join(User, UserCommunity.user_id == User.id) \
-                                             .join(Community, UserCommunity.community_id == Community.id) \
-                                             .add_columns(User.first_name, User.last_name, Community.name, UserCommunity.user_id, UserCommunity.community_id) \
-                                             .all()
+        # Join UserCommunity with User and Community tables
+        user_communities = db.session.query(
+            UserCommunity.user_id,
+            UserCommunity.community_id,
+            User.first_name,
+            User.last_name,
+            Community.name.label('community_name')
+        ).join(User, UserCommunity.user_id == User.id) \
+         .join(Community, UserCommunity.community_id == Community.id) \
+         .all()
+
+        # Check if there are any user-community relationships
         if not user_communities:
             return make_response(jsonify({"error": "No User-Community relationships found"}), 404)
         
+        # Format the result
         result = [
             {
                 "user_name": f"{uc.first_name} {uc.last_name}",
-                "community_name": uc.name,
+                "community_name": uc.community_name,
                 "user_id": uc.user_id,
                 "community_id": uc.community_id
             }
             for uc in user_communities
         ]
         return make_response(jsonify(result), 200)
-
     @admin_required()
     def post(self):
         data = request.get_json()
@@ -46,20 +55,56 @@ class UserCommunityDetails(Resource):
         if not user_ids or not community_id:
             return {'error': 'User IDs and Community ID are required.'}, 400
 
+        # Check if the community exists
         community = Community.query.get(community_id)
         if not community:
-            return {'error': 'Community not found.'}, 404
+            return {'error': f'Community with ID {community_id} not found.'}, 404
+
+        already_exists = []
+        not_found_users = []
+        added_users = []
 
         for user_id in user_ids:
             user = User.query.get(user_id)
             if not user:
-                return {'error': f'User with ID {user_id} not found.'}, 404
+                not_found_users.append(user_id)
+                continue
 
-            user_community = UserCommunity(user_id=user_id, community_id=community_id)
-            db.session.add(user_community)
+            # Check if the relationship already exists
+            existing_user_community = UserCommunity.query.filter_by(user_id=user_id, community_id=community_id).first()
+            if existing_user_community:
+                already_exists.append({
+                    'user_id': user_id,
+                    'user_name': user.username,
+                    'community_id': community_id,
+                    'community_name': community.name
+                })
+                continue
 
-        db.session.commit()
-        return {'message': 'Users successfully assigned to community.'}, 201
+            # Create a new UserCommunity entry
+            new_user_community = UserCommunity(user_id=user_id, community_id=community_id)
+            db.session.add(new_user_community)
+            added_users.append(user_id)
+
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return {'error': str(e)}, 500
+
+        response = {}
+        if already_exists:
+            response['already_exists'] = already_exists
+        if not_found_users:
+            response['not_found_users'] = not_found_users
+
+        if added_users:
+            response['message'] = 'Users successfully assigned to community!'
+        else:
+            response['message'] = 'No new users were added to the community.'
+
+        return response, 200
+
 
 api.add_resource(UserCommunityDetails, '/user_communities')
 
