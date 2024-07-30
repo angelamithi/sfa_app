@@ -252,18 +252,22 @@ api.add_resource(GoalsAssignmentDetails, '/fetching_goals')
 class UserGoalsDetails(Resource):
     @jwt_required()
     def get(self):
-        user_goals = db.session.query(UserGoals, User.username, User.first_name, User.last_name, Goals.name).join(User).join(Goals).all()
+        # Query to join UserGoals, User, and Goals
+        user_goals = db.session.query(UserGoals, User, Goals).\
+            join(User, UserGoals.user_id == User.id).\
+            join(Goals, UserGoals.goal_id == Goals.id).\
+            all()
         
         result = []
-        for user_goal in user_goals:
+        for user_goal, user, goal in user_goals:
             user_goal_data = {
-                'user_id': user_goal.User.id,
-                'username': user_goal.username,
-                'first_name': user_goal.first_name,
-                'last_name': user_goal.last_name,
-                'goal_id': user_goal.Goals.id,
-                'goal_name': user_goal.Goals.name,
-                'assigned_at': user_goal.UserGoals.assigned_at
+                'user_id': user.id,
+                'username': user.username,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'goal_id': goal.id,
+                'goal_name': goal.name,
+                'assigned_at': user_goal.assigned_at
             }
             result.append(user_goal_data)
         
