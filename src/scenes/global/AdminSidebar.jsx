@@ -36,7 +36,7 @@ const Item = ({ title, to, icon, selected, setSelected }) => {
 };
 
 const AdminSidebar = () => {
-  const theme = useTheme();  
+  const theme = useTheme();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selected, setSelected] = useState("Dashboard");
   const colors = tokens(theme.palette.mode);
@@ -119,7 +119,7 @@ const AdminSidebar = () => {
           <Box paddingLeft={isCollapsed ? undefined : "10%"}>
             <Item
               title="Dashboard"
-             
+
               icon={<HomeOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
@@ -139,7 +139,7 @@ const AdminSidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
-             <Item
+            <Item
               title="Communities"
               to="/community"
               icon={<PeopleOutlinedIcon />}
@@ -160,7 +160,7 @@ const AdminSidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
-             <Item
+            <Item
               title="Surveys"
               to="/surveys"
               icon={<PeopleOutlinedIcon />}
@@ -174,24 +174,24 @@ const AdminSidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
-            
-             <Item
+
+            <Item
               title="Sessions"
               to="/sessions"
               icon={<HelpOutlineOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
-              <Item
+            <Item
               title="Calendar"
               to="/calendar"
               icon={<CalendarTodayOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
-              
-            
-            
+
+
+
             <Typography
               variant="h6"
               color={colors.grey[300]}
@@ -206,41 +206,50 @@ const AdminSidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
-             <Item
+            <Item
               title="Manage Community"
-              to="/user_communities"
+              to="/manage_community"
               icon={<PersonOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
-              <Item
+            <Item
+              title="Manage Goals"
+              to="/manage_goals"
+              icon={<HelpOutlineOutlinedIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Item
+              title="Manage Events"
+              to="/manage_events"
+              icon={<CalendarTodayOutlinedIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Item
+              title="Manage Sessions"
+              to="/manage_sessions"
+              icon={<HelpOutlineOutlinedIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+
+            <Item
               title="Manage Polls"
               to="/manage_community"
               icon={<PersonOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
-             <Item
+            <Item
               title="Manage Surveys"
               to="/manage_community"
               icon={<PersonOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
-            <Item
-              title="Manage Calendar"
-              to="/manage_calendar"
-              icon={<CalendarTodayOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Manage FAQ Page"
-              to="/manage_faq"
-              icon={<HelpOutlineOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
+
 
             <Typography
               variant="h6"
@@ -256,14 +265,14 @@ const AdminSidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
-             <Item
+            <Item
               title="Community Reports"
               to="/team_reports"
               icon={<MapOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
-             <Item
+            <Item
               title="Event Reports"
               to="/event_reports"
               icon={<MapOutlinedIcon />}
@@ -277,14 +286,14 @@ const AdminSidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
-              <Item
+            <Item
               title="Survey Reports"
               to="/survey_reports"
               icon={<MapOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
-              <Item
+            <Item
               title="Needs Analysis Reports"
               to="/need_analysis_reports"
               icon={<MapOutlinedIcon />}
