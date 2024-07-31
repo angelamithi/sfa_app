@@ -63,6 +63,8 @@ def seed_database():
             {"name": "Q2 2024 Session", "start_date": datetime(2024, 4, 1), "end_date": datetime(2024, 6, 30), "year_id": years[0].id}
         ]
 
+
+
         # Create and add sessions
         sessions = []
         for session_info in session_data:
@@ -71,28 +73,41 @@ def seed_database():
             db.session.add(session)
         db.session.commit()
 
-# Seed data for Goals
-        goal_data = [
-    {"name": "Develop Marketing Strategy", "description": "Create a comprehensive marketing strategy for Q1", "session_id": sessions[0].id, "year_id": years[0].id,"goal_status":"Achieved"},
-    {"name": "Improve Sales Process", "description": "Enhance the sales process based on Q1 results", "session_id": sessions[0].id, "year_id": years[0].id,"goal_status":"Not Yet Achieved"}
-]
-
-
-        # Create and add goals
-        goals = []
-        for goal_info in goal_data:
-            goal = Goals(**goal_info)
-            goals.append(goal)
-            db.session.add(goal)
-        db.session.commit()
 
         
 
+        community_data = [
+            {"name": "Tech Innovators", "description": "A community of tech enthusiasts and innovators", "coordinator_id": users[0].id},
+            {"name": "Health Advocates", "description": "A community focused on health and wellness", "coordinator_id": users[3].id}
+        ]
+
+        communities = []
+        for community_info in community_data:
+            community = Community(**community_info)
+            communities.append(community)
+            db.session.add(community)
+        db.session.commit()
+
+# Seed data for Goals
+        goal_data = [
+            {"name": "Develop Marketing Strategy", "description": "Create a comprehensive marketing strategy for Q1", "session_id": sessions[0].id, "year_id": years[0].id,"goal_status":"Achieved","community_id":communities[0].id},
+            {"name": "Improve Sales Process", "description": "Enhance the sales process based on Q1 results", "session_id": sessions[0].id, "year_id": years[0].id,"goal_status":"Not Yet Achieved","community_id":communities[1].id}
+        ]
+
+
+                # Create and add goals
+        goals = []
+        for goal_info in goal_data:
+                    goal = Goals(**goal_info)
+                    goals.append(goal)
+                    db.session.add(goal)
+        db.session.commit()
+       
         # Seed data for Tasks
         task_data = [
-            {"name": "Task A", "description": "Description for Task A", "goals_id": goals[0].id, "start_date": datetime(2024, 7, 1), "end_date": datetime(2024, 7, 15), "year_id": years[0].id,"task_status":"Ongoing"},
-            {"name": "Task B", "description": "Description for Task B", "goals_id": goals[1].id, "start_date": datetime(2024, 7, 5), "end_date": datetime(2024, 7, 20), "year_id": years[0].id,"task_status":"Ongoing"},
-            {"name": "Task C", "description": "Description for Task C", "goals_id": goals[0].id, "start_date": datetime(2024, 7, 10), "end_date": datetime(2024, 7, 25), "year_id": years[0].id,"task_status":"Ongoing"}
+            {"name": "Task A", "description": "Description for Task A", "goals_id": goals[0].id, "start_date": datetime(2024, 7, 1), "end_date": datetime(2024, 7, 15), "year_id": years[0].id,"task_status":"Ongoing","community_id":communities[0].id},
+            {"name": "Task B", "description": "Description for Task B", "goals_id": goals[1].id, "start_date": datetime(2024, 7, 5), "end_date": datetime(2024, 7, 20), "year_id": years[0].id,"task_status":"Ongoing","community_id":communities[0].id},
+            {"name": "Task C", "description": "Description for Task C", "goals_id": goals[0].id, "start_date": datetime(2024, 7, 10), "end_date": datetime(2024, 7, 25), "year_id": years[0].id,"task_status":"Ongoing","community_id":communities[0].id}
         ]
 
         tasks = []
@@ -101,6 +116,11 @@ def seed_database():
             tasks.append(task)
             db.session.add(task)
         db.session.commit()
+        
+
+        
+                # Seed data for Communities
+        
 
         # Seed data for UserTasks
         user_task_data = [
@@ -120,19 +140,7 @@ def seed_database():
         db.session.commit()
 
 
-        # Seed data for Communities
-        community_data = [
-            {"name": "Tech Innovators", "description": "A community of tech enthusiasts and innovators", "coordinator_id": users[0].id,"goal_id":goals[0].id,"task_id":tasks[0].id},
-            {"name": "Health Advocates", "description": "A community focused on health and wellness", "coordinator_id": users[3].id,"goal_id":goals[1].id,"task_id":tasks[1].id}
-        ]
-
-        communities = []
-        for community_info in community_data:
-            community = Community(**community_info)
-            communities.append(community)
-            db.session.add(community)
-        db.session.commit()
-
+        
         # Seed data for UserCommunities
         user_community_data = [
             {"user_id": users[0].id, "community_id": communities[0].id},
@@ -255,9 +263,11 @@ def seed_database():
             survey_responses.append(survey_response)
             db.session.add(survey_response)
         db.session.commit()
+
+        
     
 
-    
+       
        
 
 if __name__ == "__main__":
