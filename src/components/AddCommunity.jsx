@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { retrieve } from './Encryption';
 import { useNavigate } from 'react-router-dom';
 
@@ -6,10 +6,32 @@ const AddCommunity = ({ communities = [], setCommunities }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [coordinatorId, setCoordinatorId] = useState('');
+  const [coordinators, setCoordinators] = useState([]);
   const [showForm, setShowForm] = useState(true);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetch('/fetch_coordinators', {
+      headers: {
+        'Authorization': 'Bearer ' + retrieve().access_token,
+      },
+    })
+      .then((resp) => {
+        if (!resp.ok) {
+          throw new Error('Error fetching coordinators.');
+        }
+        return resp.json();
+      })
+      .then((data) => {
+        setCoordinators(data);
+      })
+      .catch((error) => {
+        console.error('Error fetching coordinators:', error);
+        setError('Error fetching coordinators.');
+      });
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -17,7 +39,7 @@ const AddCommunity = ({ communities = [], setCommunities }) => {
     const newCommunity = {
       name,
       description,
-      coordinator_id: coordinatorId
+      coordinator_id: coordinatorId,
     };
 
     fetch(`/communities`, {
@@ -47,7 +69,7 @@ const AddCommunity = ({ communities = [], setCommunities }) => {
         setMessage('Community has been successfully created');
         setTimeout(() => {
           setShowForm(false);
-          navigate('/manage_communities');
+          navigate('/manage_community');
         }, 3000); // Display message for 3 seconds before navigating
       })
       .catch((error) => {
@@ -96,13 +118,19 @@ const AddCommunity = ({ communities = [], setCommunities }) => {
           <br />
           <div className="six wide field">
             <label>
-              Coordinator ID:
-              <input
-                type="text"
+              Coordinator:
+              <select
                 value={coordinatorId}
                 onChange={handleInputChange(setCoordinatorId)}
                 required
-              />
+              >
+                <option value="">Select Coordinator</option>
+                {coordinators.map((coordinator) => (
+                  <option key={coordinator.id} value={coordinator.id}>
+                    {coordinator.name}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
           <br />

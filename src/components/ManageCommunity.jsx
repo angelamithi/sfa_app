@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { retrieve } from './Encryption';
+
 const ManageCommunity = () => {
   const [communityDetails, setCommunityDetails] = useState([]);
   const navigate = useNavigate();
@@ -33,7 +34,28 @@ const ManageCommunity = () => {
   };
 
   const handleAssignGoalClick = () => {
-    navigate('/assign_goal');
+    navigate('/assign_community_goal');
+  };
+
+  const handleDeleteClick = (id) => {
+    if (window.confirm('Are you sure you want to delete this community?')) {
+      fetch(`/communities/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': 'Bearer ' + retrieve().access_token,
+        },
+      })
+        .then(response => {
+          if (response.ok) {
+            setCommunityDetails(prevDetails => prevDetails.filter(community => community.id !== id));
+          } else {
+            console.error('Failed to delete community');
+          }
+        })
+        .catch(error => {
+          console.error('Error deleting community:', error);
+        });
+    }
   };
 
   return (
@@ -52,8 +74,6 @@ const ManageCommunity = () => {
             <th>Name</th>
             <th>Description</th>
             <th>Coordinator</th>
-            <th>Goal</th>
-            <th>Task</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -63,11 +83,10 @@ const ManageCommunity = () => {
               <td onClick={() => handleRowClick(community.id)}>{community.id}</td>
               <td onClick={() => handleRowClick(community.id)}>{community.name}</td>
               <td onClick={() => handleRowClick(community.id)}>{community.description}</td>
-              <td onClick={() => handleRowClick(community.id)}>{community.coordinator_id}</td>
-              <td onClick={() => handleRowClick(community.id)}>{community.goal_id}</td>
-              <td onClick={() => handleRowClick(community.id)}>{community.task_id}</td>
+              <td onClick={() => handleRowClick(community.id)}>{community.coordinator_name}</td>
               <td>
                 <button onClick={() => handleEditClick(community.id)}>Edit</button>
+                <button onClick={() => handleDeleteClick(community.id)} style={{ marginLeft: '10px', color: 'red' }}>Delete</button>
               </td>
             </tr>
           ))}

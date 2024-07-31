@@ -1,8 +1,8 @@
-from flask import Blueprint, make_response, jsonify
+from flask import Blueprint, make_response, jsonify,request
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from flask_restful import Api, Resource, reqparse
 from flask_jwt_extended import jwt_required
-from models import Community, db,User,UserCommunity,Event
+from models import Community, db,User,UserCommunity,Event,Goals
 from serializer import community_schema,user_schema,volunteer_hour_schema,event_schema
 from auth import admin_required
 from sqlalchemy.orm import joinedload
@@ -63,10 +63,6 @@ class CommunityDetails(Resource):
 
 api.add_resource(CommunityDetails, '/communities')
 
-class CommunityById(Resource):
-    from flask import jsonify, make_response
-from flask_jwt_extended import jwt_required
-from sqlalchemy.orm import joinedload
 
 class CommunityById(Resource):
     @jwt_required()
@@ -112,9 +108,18 @@ class CommunityById(Resource):
         if not community:
             return make_response(jsonify({"error": "Community not found"}), 404)
 
+        # Delete all related UserCommunity instances
+        UserCommunity.query.filter_by(community_id=id).delete()
+        
+        # Delete or update all related Event instances
+        Event.query.filter_by(community_id=id).delete()
+
         db.session.delete(community)
         db.session.commit()
         return make_response(jsonify({"message": "Community deleted successfully"}), 200)
+
+
+
 
     @admin_required()
     def patch(self, id):
@@ -124,7 +129,7 @@ class CommunityById(Resource):
 
         data = patch_args.parse_args()
         for key, value in data.items():
-            if value is not None:
+            if value is not None and key not in ['goal_id', 'task_id']:  # Ignore goal_id and task_id
                 setattr(community, key, value)
 
         db.session.commit()
@@ -133,3 +138,37 @@ class CommunityById(Resource):
         return make_response(jsonify(result), 200)
 
 api.add_resource(CommunityById, '/communities/<int:id>')
+
+
+
+class AssignGoalToCommunity(Resource):
+    @jwt_required()  # Ensure this route is protected by JWT authentication
+    def post(self):
+        data = request.get_json()
+        community_id = data.get('community_id')
+        goal_id = data.get('goal_id')
+
+        if not community_id or not goal_id:
+            return {'error': 'Community ID and Goal ID are required.'}, 400
+
+        # Find the community by ID
+        community = Community.query.get(community_id)
+        if not community:
+            return {'error': f'Community with ID {community_id} not found.'}, 404
+
+        # Find the goal by ID
+        goal = Goals.query.get(goal_id)
+        if not goal:
+            return {'error': f'Goal with ID {goal_id} not found.'}, 404
+
+        # Check if the goal is already assigned to the community
+        if community.goal_id == goal_id:
+            return {'error': 'This goal is already assigned to the community.'}, 400
+
+        # Assign the goal to the community
+        community.goal_id = goal_id
+        db.session.commit()
+
+        return {'message': 'Goal successfully assigned to community!'}, 200
+
+api.add_resource(AssignGoalToCommunity, '/assign_goal_to_community')

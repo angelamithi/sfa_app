@@ -275,3 +275,25 @@ class UserGoalsDetails(Resource):
 
 # Add the resource to the API
 api.add_resource(UserGoalsDetails, '/user_goals')
+
+
+
+class CoordinatorDetails(Resource):
+    # @jwt_required()
+    def get(self):
+        # Filter users by role "coordinator"
+        users = User.query.filter_by(role='Coordinator').all()
+        result = user_schema.dump(users, many=True)
+        return make_response(jsonify(result), 200)
+
+# Assuming this is part of your Flask app setup
+api.add_resource(CoordinatorDetails, '/coordinators')
+
+
+class FetchCoordinators(Resource):
+    def get(self):
+        coordinators = User.query.filter_by(role='Coordinator').all()
+        result = [{"id": user.id, "name": f"{user.first_name} {user.last_name}"} for user in coordinators]
+        return make_response(jsonify(result), 200)
+
+api.add_resource(FetchCoordinators, '/fetch_coordinators')

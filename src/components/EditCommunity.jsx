@@ -7,8 +7,7 @@ const EditCommunity = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [coordinatorId, setCoordinatorId] = useState('');
-  const [goalId, setGoalId] = useState('');
-  const [taskId, setTaskId] = useState('');
+  const [coordinatorList, setCoordinatorList] = useState([]);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const { id } = useParams();
@@ -32,14 +31,34 @@ const EditCommunity = () => {
         setName(data.name);
         setDescription(data.description);
         setCoordinatorId(data.coordinator_id);
-        setGoalId(data.goal_id);
-        setTaskId(data.task_id);
       })
       .catch((error) => {
         console.error('Error fetching community:', error);
         setError('Failed to fetch community details. Please try again.');
       });
   }, [id]);
+
+  useEffect(() => {
+    fetch('/coordinators', {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + retrieve().access_token,
+      },
+    })
+      .then((resp) => {
+        if (!resp.ok) {
+          throw new Error('Failed to fetch coordinators');
+        }
+        return resp.json();
+      })
+      .then((data) => {
+        setCoordinatorList(data);
+      })
+      .catch((error) => {
+        console.error('Error fetching coordinators:', error);
+        setError('Failed to fetch coordinators. Please try again.');
+      });
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -49,8 +68,6 @@ const EditCommunity = () => {
       name,
       description,
       coordinator_id: coordinatorId,
-      goal_id: goalId,
-      task_id: taskId,
     };
 
     fetch(`/communities/${id}`, {
@@ -75,7 +92,7 @@ const EditCommunity = () => {
         console.log('Updated Community:', updatedData);
         setMessage('Community details have been updated successfully!');
         setTimeout(() => {
-          navigate("/manage_communities"); // Redirect to Manage Communities after a few seconds
+          navigate("/manage_community"); // Redirect to Manage Communities after a few seconds
         }, 3000); // Wait for 3 seconds before redirecting
       })
       .catch((error) => {
@@ -109,20 +126,15 @@ const EditCommunity = () => {
           </div>
           <div className="eight wide field">
             <label>
-              Coordinator ID:
-              <input type="number" value={coordinatorId} onChange={handleInputChange(setCoordinatorId)} />
-            </label>
-          </div>
-          <div className="eight wide field">
-            <label>
-              Goal ID:
-              <input type="number" value={goalId} onChange={handleInputChange(setGoalId)} />
-            </label>
-          </div>
-          <div className="eight wide field">
-            <label>
-              Task ID:
-              <input type="number" value={taskId} onChange={handleInputChange(setTaskId)} />
+              Coordinator:
+              <select value={coordinatorId} onChange={handleInputChange(setCoordinatorId)} required>
+                <option value="">Select Coordinator</option>
+                {coordinatorList.map(coordinator => (
+                  <option key={coordinator.id} value={coordinator.id}>
+                    {coordinator.first_name} {coordinator.last_name}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
           <br />
@@ -136,3 +148,5 @@ const EditCommunity = () => {
 };
 
 export default EditCommunity;
+
+
