@@ -73,28 +73,7 @@ const ViewSingleGoalDetails = () => {
           </div>
         )}
 
-        {/* Display community details */}
-        {goalDetail.communities && goalDetail.communities.length > 0 && (
-          <div>
-            <h4>Communities:</h4>
-            <ul>
-              {goalDetail.communities.map(community => (
-                <li key={community.id}>
-                  <p>Community Name: {community.name}</p>
-                  <p>Description: {community.description}</p>
-                  {community.coordinator && (
-                    <div>
-                      <h5>Coordinator:</h5>
-                      <p>Username: {community.coordinator.username}</p>
-                      <p>First Name: {community.coordinator.first_name}</p>
-                      <p>Last Name: {community.coordinator.last_name}</p>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        {/* Remove the community details section */}
       </div>
     </div>
   );

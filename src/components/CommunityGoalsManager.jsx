@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 const CommunityGoalsManager = () => {
   const [communities, setCommunities] = useState([]);
   const [goals, setGoals] = useState([]);
+  const [communityGoals, setCommunityGoals] = useState({});
   const [selectedCommunity, setSelectedCommunity] = useState('');
   const [selectedGoal, setSelectedGoal] = useState('');
   const [message, setMessage] = useState('');
@@ -14,6 +15,7 @@ const CommunityGoalsManager = () => {
   useEffect(() => {
     fetchCommunities();
     fetchGoals();
+    fetchCommunityGoals();
   }, []);
 
   const fetchCommunities = async () => {
@@ -56,6 +58,39 @@ const CommunityGoalsManager = () => {
     }
   };
 
+  const fetchCommunityGoals = async () => {
+    try {
+      const response = await fetch('/community_goals', {
+        headers: {
+          'Authorization': 'Bearer ' + retrieve().access_token,
+        },
+      });
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        const groupedData = data.reduce((acc, cg) => {
+          if (!acc[cg.community_id]) {
+            acc[cg.community_id] = {
+              community_name: cg.community_name,
+              goals: []
+            };
+          }
+          if (!acc[cg.community_id].goals.some(g => g.goal_id === cg.goal_id)) {
+            acc[cg.community_id].goals.push({
+              goal_id: cg.goal_id,
+              goal_name: cg.goal_name
+            });
+          }
+          return acc;
+        }, {});
+        setCommunityGoals(groupedData);
+      } else {
+        console.error('Expected community-goals to be an array:', data);
+      }
+    } catch (error) {
+      console.error('Error fetching community-goals:', error);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -89,6 +124,7 @@ const CommunityGoalsManager = () => {
         setTimeout(() => {
           setMessage('');
         }, 3000);
+        fetchCommunityGoals();
       }
     } catch (error) {
       console.error('Error assigning goal to community:', error);
@@ -101,6 +137,39 @@ const CommunityGoalsManager = () => {
         Back
       </button>
       <h2>Community Goals Manager</h2>
+      <div>
+        <h3>Current Community Goals:</h3>
+        {Object.keys(communityGoals).length > 0 ? (
+          <table>
+            <thead>
+              <tr>
+                <th>Community Name</th>
+                <th>Goals</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.keys(communityGoals).map(communityId => (
+                <tr key={communityId}>
+                  <td>{communityGoals[communityId].community_name}</td>
+                  <td>
+                    {communityGoals[communityId].goals.length > 0 ? (
+                      <ul>
+                        {communityGoals[communityId].goals.map(goal => (
+                          <li key={goal.goal_id}>{goal.goal_name}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>No goals assigned</p>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p>No goals assigned yet.</p>
+        )}
+      </div>
       <div>
         <h3>Assign Goal to Community</h3>
         <form onSubmit={handleSubmit}>

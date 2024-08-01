@@ -1,7 +1,7 @@
 from flask import Blueprint, make_response, jsonify
 from flask_restful import Api, Resource, reqparse
 from flask_jwt_extended import jwt_required
-from models import Goals, db,Session,Community,Year
+from models import Goals, db,Session,Community,Year,Tasks,UserTask
 from serializer import goal_schema
 from auth import admin_required
 from datetime import datetime
@@ -15,6 +15,7 @@ post_args.add_argument('user_id', type=str, required=True, help='User ID is requ
 post_args.add_argument('name', type=str, required=True, help='Name is required')
 post_args.add_argument('description', type=str, required=True, help='Description is required')
 post_args.add_argument('session_id', type=str, required=True, help='Session ID is required')
+
 post_args.add_argument('year_id', type=int, required=False)
 
 patch_args = reqparse.RequestParser()
@@ -33,8 +34,11 @@ class GoalsDetails(Resource):
         if not year:
             return make_response(jsonify({"message": "No goals found for the current year"}), 404)
 
-        # Simplified query to isolate the problem
-        goals = db.session.query(Goals, Session, Community).distinct().join(Session, Goals.session_id == Session.id).join(Community, Goals.id == Community.goal_id).filter(Goals.year_id == year.id).all()
+        # Corrected query to reflect the updated relationships
+        goals = db.session.query(Goals, Session, Community).distinct().\
+            join(Session, Goals.session_id == Session.id).\
+            join(Community, Goals.community_id == Community.id).\
+            filter(Goals.year_id == year.id).all()
 
         if not goals:
             return make_response(jsonify({"message": "No goals found for the current year"}), 404)
@@ -52,6 +56,7 @@ class GoalsDetails(Resource):
             })
 
         return make_response(jsonify(result), 200)
+
 
 
 
@@ -83,7 +88,7 @@ class GoalById(Resource):
         # Fetch the goal along with associated data
         goal = Goals.query.options(
             joinedload(Goals.tasks),
-            joinedload(Goals.community_goals).joinedload(Community.coordinator),
+            joinedload(Goals.community),  # This should load the community if needed
             joinedload(Goals.session)
         ).filter_by(id=id).first()
 
@@ -112,29 +117,32 @@ class GoalById(Resource):
                     'status': task.task_status
                 } for task in goal.tasks
             ],
-            'communities': [
-                {
-                    'id': community.id,
-                    'name': community.name,
-                    'description': community.description,
-                    'coordinator': {
-                        'id': community.coordinator.id,
-                        'username': community.coordinator.username,
-                        'first_name': community.coordinator.first_name,
-                        'last_name': community.coordinator.last_name
-                    } if community.coordinator else None
-                } for community in goal.community_goals
-            ]
+            # Remove 'communities' serialization if no longer needed
         }
-      
+
         return make_response(jsonify(result), 200)
+
+
 
     @admin_required()
     def delete(self, id):
         goal = Goals.query.get(id)
         if not goal:
             return make_response(jsonify({"error": "Goal not found"}), 404)
-        db.session.delete(goal)
+
+        # Get all tasks related to the goal
+        tasks = Tasks.query.filter_by(goals_id=goal.id).all()
+        for task in tasks:
+            # Delete or update related entries in user_tasks
+            user_tasks = UserTask.query.filter_by(task_id=task.id).all()
+            for user_task in user_tasks:
+                db.session.delete(user_task)  # or update to another valid task_id
+                # user_task.task_id = new_valid_task_id
+                # db.session.add(user_task)
+
+            db.session.delete(task)  # delete the task
+
+        db.session.delete(goal)  # delete the goal
         db.session.commit()
         return make_response(jsonify({"message": "Goal deleted successfully"}), 200)
 
@@ -152,3 +160,33 @@ class GoalById(Resource):
         return make_response(jsonify(result), 200)
 
 api.add_resource(GoalById, '/goals/<int:id>')
+
+
+
+# New Resource for fetching community goals
+class CommunityGoals(Resource):
+    @jwt_required()
+    def get(self):
+        # Query to fetch all community goals
+        community_goals = db.session.query(Goals, Community).join(Community, Goals.community_id == Community.id).all()
+
+        if not community_goals:
+            return make_response(jsonify({"message": "No community goals found"}), 404)
+
+        # Format the result
+        result = []
+        for goal, community in community_goals:
+            result.append({
+                "community_id": community.id,
+                "community_name": community.name,
+                "goal_id": goal.id,
+                "goal_name": goal.name,
+                "goal_description": goal.description,
+                "goal_status": goal.goal_status,
+                "session_id": goal.session_id,
+                "year_id": goal.year_id,
+            })
+
+        return make_response(jsonify(result), 200)
+
+api.add_resource(CommunityGoals, '/community_goals')

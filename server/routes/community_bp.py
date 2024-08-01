@@ -162,13 +162,14 @@ class AssignGoalToCommunity(Resource):
             return {'error': f'Goal with ID {goal_id} not found.'}, 404
 
         # Check if the goal is already assigned to the community
-        if community.goal_id == goal_id:
+        if goal in community.community_goals:
             return {'error': 'This goal is already assigned to the community.'}, 400
 
         # Assign the goal to the community
-        community.goal_id = goal_id
+        community.community_goals.append(goal)
         db.session.commit()
 
         return {'message': 'Goal successfully assigned to community!'}, 200
 
 api.add_resource(AssignGoalToCommunity, '/assign_goal_to_community')
+

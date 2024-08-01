@@ -92,3 +92,21 @@ class SessionById(Resource):
         return make_response(jsonify(result), 200)
 
 api.add_resource(SessionById, '/sessions/<int:id>')
+
+
+class RetrieveSessionsNames(Resource):
+    @jwt_required()
+    def get(self):
+        current_year = datetime.now().year
+        
+        # Query sessions for the current year with joined Year
+        sessions = db.session.query(Session).join(Year).filter(Year.year_name == current_year).all()
+        
+        # Collect all session names and ids
+        result = [{'id': session.id, 'name': session.name} for session in sessions]
+        
+        return make_response(jsonify(result), 200)
+
+
+
+api.add_resource(RetrieveSessionsNames, '/sessions_names')

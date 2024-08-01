@@ -192,7 +192,7 @@ class Goals(db.Model):
     session_id = db.Column(db.String, db.ForeignKey('sessions.id'), nullable=False)
     year_id = db.Column(db.Integer, db.ForeignKey('years.id'))
     tasks = db.relationship('Tasks', backref="goals")
-    community_id= db.Column(db.Integer, db.ForeignKey('communities.id'))
+    community_id= db.Column(db.Integer, db.ForeignKey('communities.id'),nullable=True)
    
     users = db.relationship('User', backref="goals")
  

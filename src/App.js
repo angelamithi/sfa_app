@@ -30,6 +30,8 @@ import EditCommunity from "./components/EditCommunity";
 import AddCommunity from "./components/AddCommunity";
 import ManageCommunity from "./components/ManageCommunity";
 import CommunityGoalsManager from "./components/CommunityGoalsManager";
+import ManageGoals from "./components/ManageGoals";
+import EditGoal from "./components/EditGoal";
 import Invoices from "./scenes/invoices";
 import Contacts from "./scenes/contacts";
 import Bar from "./scenes/bar";
@@ -121,6 +123,8 @@ function App() {
                   <Route path="/edit_community/:id" element={<EditCommunity/>} />
                   <Route path="/manage_community" element={<ManageCommunity/>} />
                   <Route path="/assign_community_goal" element={<CommunityGoalsManager/>} />
+                  <Route path="/manage_goals" element={<ManageGoals/>} />
+                  <Route path="/edit_goal/:id" element={<EditGoal/>} />
 
         
 
