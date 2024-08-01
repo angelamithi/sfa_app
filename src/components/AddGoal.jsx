@@ -3,31 +3,22 @@ import { retrieve } from './Encryption'; // Adjust the import based on your file
 import { useNavigate } from 'react-router-dom';
 
 const AddGoal = ({ goals = [], setGoals }) => {
-  const [userId, setUserId] = useState('');
+
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [sessionId, setSessionId] = useState('');
-  const [yearId, setYearId] = useState('');
-  const [users, setUsers] = useState([]);
   const [sessions, setSessions] = useState([]);
-  const [years, setYears] = useState([]);
   const [showForm, setShowForm] = useState(true);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch users, sessions, and years data from the backend
-    Promise.all([
-      fetch('/users', { headers: { 'Authorization': 'Bearer ' + retrieve().access_token } }),
-      fetch('/sessions', { headers: { 'Authorization': 'Bearer ' + retrieve().access_token } }),
-      fetch('/years', { headers: { 'Authorization': 'Bearer ' + retrieve().access_token } })
-    ])
-      .then(responses => Promise.all(responses.map(resp => resp.json())))
-      .then(([usersData, sessionsData, yearsData]) => {
-        setUsers(usersData);
+    // Fetch sessions data from the backend
+    fetch('/sessions_names', { headers: { 'Authorization': 'Bearer ' + retrieve().access_token } })
+      .then(response => response.json())
+      .then((sessionsData) => {
         setSessions(sessionsData);
-        setYears(yearsData);
       })
       .catch(error => {
         console.error('Error fetching data:', error);
@@ -39,11 +30,9 @@ const AddGoal = ({ goals = [], setGoals }) => {
     e.preventDefault();
 
     const newGoal = {
-      user_id: userId,
       name,
       description,
-      session_id: sessionId,
-      year_id: yearId || null
+      session_id: sessionId
     };
 
     fetch('/goals', {
@@ -97,24 +86,6 @@ const AddGoal = ({ goals = [], setGoals }) => {
         <form onSubmit={handleSubmit}>
           <div className="six wide field">
             <label>
-              User:
-              <select
-                value={userId}
-                onChange={handleInputChange(setUserId)}
-                required
-              >
-                <option value="">Select User</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.username}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <br />
-          <div className="six wide field">
-            <label>
               Goal Name:
               <input
                 type="text"
@@ -149,23 +120,6 @@ const AddGoal = ({ goals = [], setGoals }) => {
                 {sessions.map((session) => (
                   <option key={session.id} value={session.id}>
                     {session.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <br />
-          <div className="six wide field">
-            <label>
-              Year:
-              <select
-                value={yearId}
-                onChange={handleInputChange(setYearId)}
-              >
-                <option value="">Select Year (Optional)</option>
-                {years.map((year) => (
-                  <option key={year.id} value={year.id}>
-                    {year.year_name}
                   </option>
                 ))}
               </select>

@@ -196,7 +196,7 @@ class Goals(db.Model):
    
     users = db.relationship('User', backref="goals")
  
-    goal_status=db.Column(db.String, nullable=False)
+    goal_status=db.Column(db.String, nullable=True)
     users = db.relationship('UserGoals', back_populates='goal')  
    
 class UserGoals(db.Model):

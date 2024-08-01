@@ -15,12 +15,14 @@ post_args.add_argument('year_name', type=int, required=True, help='Year Name is 
 patch_args = reqparse.RequestParser()
 patch_args.add_argument('year_name', type=int)
 
-# Define Resource for all Years
+
+    
 class YearsDetails(Resource):
     @jwt_required()
     def get(self):
         years = Year.query.all()
-        result = year_schema.dump(years)
+        result = year_schema.dump(years,many=True)
+        print(result)
         return make_response(jsonify(result), 200)
 
     @admin_required()

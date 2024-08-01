@@ -11,15 +11,15 @@ api = Api(goals_bp)
 
 # Define request parsers for POST and PATCH methods
 post_args = reqparse.RequestParser()
-post_args.add_argument('user_id', type=str, required=True, help='User ID is required')
+
 post_args.add_argument('name', type=str, required=True, help='Name is required')
 post_args.add_argument('description', type=str, required=True, help='Description is required')
 post_args.add_argument('session_id', type=str, required=True, help='Session ID is required')
 
-post_args.add_argument('year_id', type=int, required=False)
+
 
 patch_args = reqparse.RequestParser()
-patch_args.add_argument('user_id', type=str)
+
 patch_args.add_argument('name', type=str)
 patch_args.add_argument('description', type=str)
 patch_args.add_argument('session_id', type=str)
@@ -34,11 +34,15 @@ class GoalsDetails(Resource):
         if not year:
             return make_response(jsonify({"message": "No goals found for the current year"}), 404)
 
-        # Corrected query to reflect the updated relationships
+        # Corrected query to include goals with null community_id and null goal_status
         goals = db.session.query(Goals, Session, Community).distinct().\
             join(Session, Goals.session_id == Session.id).\
-            join(Community, Goals.community_id == Community.id).\
-            filter(Goals.year_id == year.id).all()
+            outerjoin(Community, Goals.community_id == Community.id).\
+            filter(
+                Goals.year_id == year.id,
+                (Goals.community_id == None) | (Community.id != None),
+                (Goals.goal_status == None) | (Goals.goal_status != None)
+            ).all()
 
         if not goals:
             return make_response(jsonify({"message": "No goals found for the current year"}), 404)
@@ -50,9 +54,9 @@ class GoalsDetails(Resource):
                 "goal_id": goal.id,
                 "goal_name": goal.name,
                 "goal_description": goal.description,
-                "goal_status": goal.goal_status,
+                "goal_status": goal.goal_status if goal.goal_status else 'No Status',
                 "session_name": session.name,
-                "community_name": community.name
+                "community_name": community.name if community else 'No Community'
             })
 
         return make_response(jsonify(result), 200)
@@ -62,15 +66,24 @@ class GoalsDetails(Resource):
 
 
 
+
+
+
     @admin_required()
     def post(self):
         data = post_args.parse_args()
+        current_year = datetime.utcnow().year
+        year = Year.query.filter_by(year_name=current_year).first()
+
+        if not year:
+            return make_response(jsonify({"message": "Current year not found in database"}), 404)
+
         new_goal = Goals(
-            user_id=data['user_id'],
+          
             name=data['name'],
             description=data['description'],
             session_id=data['session_id'],
-            year_id=data.get('year_id')
+            year_id=year.id
         )
         db.session.add(new_goal)
         db.session.commit()
@@ -78,6 +91,7 @@ class GoalsDetails(Resource):
         return make_response(jsonify(result), 201)
 
 api.add_resource(GoalsDetails, '/goals')
+
 
 
 

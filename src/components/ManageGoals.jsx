@@ -4,22 +4,57 @@ import { retrieve } from './Encryption';
 
 const ManageGoals = () => {
   const [goalsDetails, setGoalsDetails] = useState([]);
+  const [years, setYears] = useState([]);
+  const [selectedYear, setSelectedYear] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('/goals', {
+    fetch('/years', {
       headers: {
         'Authorization': 'Bearer ' + retrieve().access_token,
       },
     })
       .then(response => response.json())
       .then(data => {
-        setGoalsDetails(data);
+        console.log('Fetched years:', data); // Log the data to inspect it
+        if (Array.isArray(data)) {
+          setYears(data);
+          const currentYear = new Date().getFullYear();
+          const currentYearData = data.find(year => parseInt(year.year_name) === currentYear);
+          if (currentYearData) {
+            setSelectedYear(currentYearData.id);
+          } else if (data.length > 0) {
+            setSelectedYear(data[0].id);
+          }
+        } else {
+          console.error('Error: data is not an array', data);
+        }
       })
       .catch(error => {
-        console.error('Error fetching goals:', error);
+        console.error('Error fetching years:', error);
       });
   }, []);
+
+  useEffect(() => {
+    if (selectedYear) {
+      fetch(`/goals?year_id=${selectedYear}`, {
+        headers: {
+          'Authorization': 'Bearer ' + retrieve().access_token,
+        },
+      })
+        .then(response => response.json())
+        .then(data => {
+          setGoalsDetails(data);
+        })
+        .catch(error => {
+          console.error('Error fetching goals:', error);
+        });
+    }
+  }, [selectedYear]);
+
+  const handleYearChange = (event) => {
+    setSelectedYear(event.target.value);
+  };
 
   const handleRowClick = (id) => {
     navigate(`/goal/${id}`);
@@ -57,11 +92,21 @@ const ManageGoals = () => {
   return (
     <div className='content-wrapper' style={{ marginLeft: "280px", backgroundColor: "white", marginTop: "20px" }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <h2>All Goals for Current Year</h2>
+        <div>
+          <label htmlFor="year-select">Select Year: </label>
+          <select id="year-select" value={selectedYear} onChange={handleYearChange}>
+            {years.map(year => (
+              <option key={year.id} value={year.id}>
+                {year.year_name}
+              </option>
+            ))}
+          </select>
+        </div>
         <div>
           <button onClick={handleCreateGoalClick}>Create Goal</button>
         </div>
       </div>
+      <h2>All Goals for Selected Year</h2>
       <table className='ui striped table' style={{ width: "1200px", marginLeft: "60px", marginBottom: "20px" }}>
         <thead>
           <tr>
@@ -80,9 +125,9 @@ const ManageGoals = () => {
               <td onClick={() => handleRowClick(goal.goal_id)}>{goal.goal_id}</td>
               <td onClick={() => handleRowClick(goal.goal_id)}>{goal.goal_name}</td>
               <td onClick={() => handleRowClick(goal.goal_id)}>{goal.goal_description}</td>
-              <td onClick={() => handleRowClick(goal.goal_id)}>{goal.goal_status}</td>
+              <td onClick={() => handleRowClick(goal.goal_id)}>{goal.goal_status || 'No Status'}</td>
               <td onClick={() => handleRowClick(goal.goal_id)}>{goal.session_name}</td>
-              <td onClick={() => handleRowClick(goal.goal_id)}>{goal.community_name}</td>
+              <td onClick={() => handleRowClick(goal.goal_id)}>{goal.community_name || 'No Community'}</td>
               <td>
                 <button onClick={() => handleEditClick(goal.goal_id)}>Edit</button>
                 <button onClick={() => handleDeleteClick(goal.goal_id)} style={{ marginLeft: '10px', color: 'red' }}>Delete</button>
