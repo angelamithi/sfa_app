@@ -1,7 +1,7 @@
 from flask import Blueprint, make_response, jsonify
 from flask_restful import Api, Resource, reqparse
 from flask_jwt_extended import jwt_required
-from models import Event, db, User, Report
+from models import Event, db, User, Report,Poll,Transcription
 from serializer import event_schema
 from auth import admin_required
 from google.auth.transport.requests import Request
@@ -52,7 +52,9 @@ if not creds or not creds.valid:
 
 service = build('calendar', 'v3', credentials=creds)
 
-class EventDetails(Resource):
+class EventDetails(Resource):   
+
+ 
 
     @jwt_required()
     def get(self):
@@ -65,13 +67,20 @@ class EventDetails(Resource):
             # Fetch coordinator details
             coordinator = User.query.get(event.coordinator_id)
 
+            # Format event_date to include only the date
+            event_date = event.event_date.strftime('%Y-%m-%d') if event.event_date else None
+
+            # Format start_time and end_time to include only the time
+            start_time = event.start_time.strftime('%H:%M:%S') if event.start_time else None
+            end_time = event.end_time.strftime('%H:%M:%S') if event.end_time else None
+
             event_data = {
                 "id": event.id,
                 "title": event.title,
                 "description": event.description,
-                "event_date": event.event_date.isoformat() if event.event_date else None,
-                "start_time": event.start_time.isoformat() if event.start_time else None,
-                "end_time": event.end_time.isoformat() if event.end_time else None,
+                "event_date": event_date,
+                "start_time": start_time,
+                "end_time": end_time,
                 "zoom_link": event.zoom_link,
                 "coordinator_name": f"{coordinator.first_name} {coordinator.last_name}" if coordinator else None,
                 "community_name": event.community.name if event.community else None,
@@ -162,7 +171,7 @@ class EventById(Resource):
         coordinator = User.query.get(event.coordinator_id)
 
         # Fetch report details
-        report = Report.query.filter_by(event_id=event.id).first()
+        report = Report.query.filter_by(event_id=id).first()
 
         # Fetch user details for the report
         report_user = User.query.get(report.user_id) if report else None
@@ -254,11 +263,21 @@ class EventById(Resource):
         updated_event['attendees'] = [{'email': email} for email in user_emails]
         service.events().update(calendarId='primary', eventId=event.calendar_event_id, body=updated_event).execute()
 
-        # Return only the time part for start_time and end_time
-        result = event_schema.dump(event)
-        result['start_time'] = event.start_time.isoformat()
-        result['end_time'] = event.end_time.isoformat()
+        # Return all attributes of the event
+        result = {
+            'id': event.id,
+            'title': event.title,
+            'description': event.description,
+            'event_date': event.event_date.isoformat(),
+            'start_time': event.start_time.isoformat(),
+            'end_time': event.end_time.isoformat(),
+            'zoom_link': event.zoom_link,
+            'community_id': event.community_id,
+            'coordinator_id': event.coordinator_id,
+            'calendar_event_id': event.calendar_event_id
+        }
         return make_response(jsonify(result), 200)
+
 
     @admin_required()
     def delete(self, id):
@@ -266,7 +285,11 @@ class EventById(Resource):
         if not event:
             print("Event not found")
             return make_response(jsonify({"error": "Event not found"}), 404)
-
+        # Optionally delete related records in other tables
+        Poll.query.filter_by(event_id=id).delete()
+        Report.query.filter_by(event_id=id).delete()
+        Transcription.query.filter_by(event_id=id).delete()
+       
         # Delete event from Google Calendar if the calendar_event_id exists
         if event.calendar_event_id:
             service.events().delete(calendarId='primary', eventId=event.calendar_event_id).execute()

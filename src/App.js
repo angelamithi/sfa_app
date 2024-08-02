@@ -34,6 +34,7 @@ import ManageGoals from "./components/ManageGoals";
 import EditGoal from "./components/EditGoal";
 import AddGoal from "./components/AddGoal";
 import ManageSessions from "./components/ManageSessions";
+import AddEvent from "./components/AddEvent";
 import Invoices from "./scenes/invoices";
 import Contacts from "./scenes/contacts";
 import Bar from "./scenes/bar";
@@ -53,7 +54,8 @@ import ManageTeam from "./components/ManageTeam";
 import EditUser from "./components/EditUser";
 import AddSession from "./components/AddSession";
 import EditSession from "./components/EditSession";
-
+import ManageEvents from "./components/ManageEvents";
+import EditEvent from "./components/EditEvent";
 function App() {
   const [theme, colorMode] = useMode();
   const [isSidebar, setIsSidebar] = useState(true);
@@ -133,6 +135,9 @@ function App() {
                   <Route path="/manage_sessions" element={<ManageSessions/>} />
                   <Route path="/add_session" element={<AddSession/>} />
                   <Route path="/edit_session/:id" element={<EditSession/>} />
+                  <Route path="/manage_events" element={<ManageEvents/>} />
+                  <Route path="/add_event" element={<AddEvent/>} />
+                  <Route path="/edit_event/:id" element={<EditEvent/>} />
 
 
         
