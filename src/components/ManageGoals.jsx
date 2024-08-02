@@ -9,14 +9,13 @@ const ManageGoals = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('/years', {
+    fetch('/years_by_name', {
       headers: {
         'Authorization': 'Bearer ' + retrieve().access_token,
       },
     })
       .then(response => response.json())
       .then(data => {
-        console.log('Fetched years:', data); // Log the data to inspect it
         if (Array.isArray(data)) {
           setYears(data);
           const currentYear = new Date().getFullYear();
@@ -37,16 +36,22 @@ const ManageGoals = () => {
 
   useEffect(() => {
     if (selectedYear) {
-      fetch(`/goals?year_id=${selectedYear}`, {
+      fetch(`/goals_by_year?year_id=${selectedYear}`, {
         headers: {
           'Authorization': 'Bearer ' + retrieve().access_token,
         },
       })
         .then(response => response.json())
         .then(data => {
-          setGoalsDetails(data);
+          if (Array.isArray(data)) {
+            setGoalsDetails(data);
+          } else {
+            setGoalsDetails([]);
+            console.error('Error: data is not an array', data);
+          }
         })
         .catch(error => {
+          setGoalsDetails([]);
           console.error('Error fetching goals:', error);
         });
     }
@@ -89,6 +94,14 @@ const ManageGoals = () => {
     }
   };
 
+  const formatDate = (dateString) => {
+    if (dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString(); // Format to 'MM/DD/YYYY' or adjust as needed
+    }
+    return '';
+  };
+
   return (
     <div className='content-wrapper' style={{ marginLeft: "280px", backgroundColor: "white", marginTop: "20px" }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
@@ -107,35 +120,39 @@ const ManageGoals = () => {
         </div>
       </div>
       <h2>All Goals for Selected Year</h2>
-      <table className='ui striped table' style={{ width: "1200px", marginLeft: "60px", marginBottom: "20px" }}>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Status</th>
-            <th>Session</th>
-            <th>Community</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {goalsDetails.map(goal => (
-            <tr key={goal.goal_id} style={{ cursor: 'pointer' }}>
-              <td onClick={() => handleRowClick(goal.goal_id)}>{goal.goal_id}</td>
-              <td onClick={() => handleRowClick(goal.goal_id)}>{goal.goal_name}</td>
-              <td onClick={() => handleRowClick(goal.goal_id)}>{goal.goal_description}</td>
-              <td onClick={() => handleRowClick(goal.goal_id)}>{goal.goal_status || 'No Status'}</td>
-              <td onClick={() => handleRowClick(goal.goal_id)}>{goal.session_name}</td>
-              <td onClick={() => handleRowClick(goal.goal_id)}>{goal.community_name || 'No Community'}</td>
-              <td>
-                <button onClick={() => handleEditClick(goal.goal_id)}>Edit</button>
-                <button onClick={() => handleDeleteClick(goal.goal_id)} style={{ marginLeft: '10px', color: 'red' }}>Delete</button>
-              </td>
+      {goalsDetails.length === 0 ? (
+        <p>No Goals found for the selected year.</p>
+      ) : (
+        <table className='ui striped table' style={{ width: "1200px", marginLeft: "60px", marginBottom: "20px" }}>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th>Session</th>
+              <th>Community</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {goalsDetails.map(goal => (
+              <tr key={goal.goal_id} style={{ cursor: 'pointer' }}>
+                <td onClick={() => handleRowClick(goal.goal_id)}>{goal.goal_id}</td>
+                <td onClick={() => handleRowClick(goal.goal_id)}>{goal.goal_name}</td>
+                <td onClick={() => handleRowClick(goal.goal_id)}>{goal.goal_description}</td>
+                <td onClick={() => handleRowClick(goal.goal_id)}>{goal.goal_status || 'No Status'}</td>
+                <td onClick={() => handleRowClick(goal.goal_id)}>{formatDate(goal.session_date)}</td>
+                <td onClick={() => handleRowClick(goal.goal_id)}>{goal.community_name || 'No Community'}</td>
+                <td>
+                  <button onClick={() => handleEditClick(goal.goal_id)}>Edit</button>
+                  <button onClick={() => handleDeleteClick(goal.goal_id)} style={{ marginLeft: '10px', color: 'red' }}>Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 };

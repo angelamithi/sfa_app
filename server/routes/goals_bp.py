@@ -1,4 +1,4 @@
-from flask import Blueprint, make_response, jsonify
+from flask import Blueprint, make_response, jsonify,request
 from flask_restful import Api, Resource, reqparse
 from flask_jwt_extended import jwt_required
 from models import Goals, db,Session,Community,Year,Tasks,UserTask
@@ -204,3 +204,33 @@ class CommunityGoals(Resource):
         return make_response(jsonify(result), 200)
 
 api.add_resource(CommunityGoals, '/community_goals')
+
+class GoalsByYear(Resource):
+    @jwt_required()
+    def get(self):
+        year_id = request.args.get('year_id')
+        if not year_id:
+            return make_response(jsonify({"message": "Year ID is required"}), 400)
+        
+        goals = db.session.query(Goals, Session, Community).distinct().\
+            join(Session, Goals.session_id == Session.id).\
+            outerjoin(Community, Goals.community_id == Community.id).\
+            filter(Goals.year_id == year_id).all()
+
+        if not goals:
+            return make_response(jsonify({"message": "No goals found for the specified year"}), 404)
+
+        result = []
+        for goal, session, community in goals:
+            result.append({
+                "goal_id": goal.id,
+                "goal_name": goal.name,
+                "goal_description": goal.description,
+                "goal_status": goal.goal_status if goal.goal_status else 'No Status',
+                "session_name": session.name,
+                "community_name": community.name if community else 'No Community'
+            })
+
+        return make_response(jsonify(result), 200)
+
+api.add_resource(GoalsByYear, '/goals_by_year')

@@ -4,6 +4,7 @@ from flask_jwt_extended import jwt_required
 from models import Year, db
 from serializer import year_schema
 from auth import admin_required
+from datetime import datetime
 
 years_bp = Blueprint('years_bp', __name__)
 api = Api(years_bp)
@@ -27,14 +28,17 @@ class YearsDetails(Resource):
 
     @admin_required()
     def post(self):
-        data = post_args.parse_args()
-        new_year = Year(
-            year_name=data['year_name']
-        )
+        current_year = datetime.now().year
+        existing_year = Year.query.filter_by(year_name=current_year).first()
+        if existing_year:
+            return make_response(jsonify({"error": "Current year already exists"}), 400)
+
+        new_year = Year(year_name=current_year)
         db.session.add(new_year)
         db.session.commit()
         result = year_schema.dump(new_year)
         return make_response(jsonify(result), 201)
+
 
 api.add_resource(YearsDetails, '/years')
 
@@ -71,3 +75,14 @@ class YearById(Resource):
         return make_response(jsonify(result), 200)
 
 api.add_resource(YearById, '/years/<int:id>')
+
+class FetchYears(Resource):
+    @jwt_required()
+    def get(self):
+        years = Year.query.all()
+        result = [{"id": year.id, "year_name": year.year_name} for year in years]
+        return make_response(jsonify(result), 200)
+
+api.add_resource(FetchYears, '/years_by_name')
+
+

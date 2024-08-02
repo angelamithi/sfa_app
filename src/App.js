@@ -33,6 +33,7 @@ import CommunityGoalsManager from "./components/CommunityGoalsManager";
 import ManageGoals from "./components/ManageGoals";
 import EditGoal from "./components/EditGoal";
 import AddGoal from "./components/AddGoal";
+import ManageSessions from "./components/ManageSessions";
 import Invoices from "./scenes/invoices";
 import Contacts from "./scenes/contacts";
 import Bar from "./scenes/bar";
@@ -50,6 +51,8 @@ import ResetPassword from "./components/ResetPassword";
 import ForgotPassword from "./components/ForgotPassword";
 import ManageTeam from "./components/ManageTeam";
 import EditUser from "./components/EditUser";
+import AddSession from "./components/AddSession";
+import EditSession from "./components/EditSession";
 
 function App() {
   const [theme, colorMode] = useMode();
@@ -127,6 +130,10 @@ function App() {
                   <Route path="/manage_goals" element={<ManageGoals/>} />
                   <Route path="/edit_goal/:id" element={<EditGoal/>} />
                   <Route path="/add_goal" element={<AddGoal/>} />
+                  <Route path="/manage_sessions" element={<ManageSessions/>} />
+                  <Route path="/add_session" element={<AddSession/>} />
+                  <Route path="/edit_session/:id" element={<EditSession/>} />
+
 
         
 
