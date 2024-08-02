@@ -28,24 +28,26 @@ const ManageSessions = () => {
   };
 
   const handleDelete = async (id) => {
-    console.log('Deleting session with id:', id); // Debugging statement
-    try {
-      const response = await fetch(`/sessions/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': 'Bearer ' + retrieve().access_token,
-        },
-      });
-      if (response.ok) {
-        fetchSessions();
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Failed to delete session.');
-        console.error('Error deleting session:', errorData);
+    if (window.confirm('Are you sure you want to delete this session?')) {
+      console.log('Deleting session with id:', id); // Debugging statement
+      try {
+        const response = await fetch(`/sessions/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + retrieve().access_token,
+          },
+        });
+        if (response.ok) {
+          fetchSessions();
+        } else {
+          const errorData = await response.json();
+          setError(errorData.error || 'Failed to delete session.');
+          console.error('Error deleting session:', errorData);
+        }
+      } catch (error) {
+        console.error('Error deleting session:', error);
+        setError('Failed to delete session. Please try again.');
       }
-    } catch (error) {
-      console.error('Error deleting session:', error);
-      setError('Failed to delete session. Please try again.');
     }
   };
 
@@ -94,7 +96,6 @@ const ManageSessions = () => {
               <th>Name</th>
               <th>Start Date</th>
               <th>End Date</th>
-           
               <th>Actions</th>
             </tr>
           </thead>
@@ -104,10 +105,9 @@ const ManageSessions = () => {
                 <td>{session.session_name}</td>
                 <td>{session.start_date}</td>
                 <td>{session.end_date}</td>
-              
                 <td>
                   <button onClick={() => handleEdit(session.session_id)}>Edit</button>
-                  <button onClick={() => handleDelete(session.session_id)}>Delete</button>
+                  <button onClick={() => handleDelete(session.session_id)} style={{ marginLeft: '10px', color: 'red' }}>Delete</button>
                 </td>
               </tr>
             ))}
