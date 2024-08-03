@@ -1,4 +1,4 @@
-from flask import Blueprint, make_response, jsonify
+from flask import Blueprint, make_response, jsonify,request
 from flask_restful import Api, Resource, reqparse
 from flask_jwt_extended import jwt_required
 from models import Event, db, User, Report,Poll,Transcription
@@ -9,7 +9,9 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 import os
-import datetime
+from datetime import datetime, time,date
+import pytz
+from dateutil import parser
 
 event_bp = Blueprint('event_bp', __name__)
 api = Api(event_bp)
@@ -87,26 +89,32 @@ class EventDetails(Resource):
             }
             event_list.append(event_data)
 
-        print("Events fetched:", event_list)
+        # print("Events fetched:", event_list)
         return make_response(jsonify(event_list), 200)
 
 
-    @admin_required()
+  
+
+    @jwt_required()
     def post(self):
         data = post_args.parse_args()
 
         # Convert string date and time to datetime objects
-        event_date = datetime.datetime.strptime(data['event_date'], '%Y-%m-%d').date()
-        start_time = datetime.datetime.strptime(data['start_time'], '%H:%M:%S').time()
-        end_time = datetime.datetime.strptime(data['end_time'], '%H:%M:%S').time()
+        event_date = datetime.strptime(data['event_date'], '%Y-%m-%d').date()
+        start_time = datetime.strptime(data['start_time'], '%H:%M:%S').time()
+        end_time = datetime.strptime(data['end_time'], '%H:%M:%S').time()
+
+        # Combine date with time to create datetime objects
+        start_datetime = datetime.combine(event_date, start_time)
+        end_datetime = datetime.combine(event_date, end_time)
 
         # Create event in the database
         new_event = Event(
             title=data['title'],
             description=data.get('description'),
             event_date=event_date,
-            start_time=start_time,
-            end_time=end_time,
+            start_time=start_datetime,  # Store as datetime
+            end_time=end_datetime,  # Store as datetime
             zoom_link=data.get('zoom_link'),
             community_id=data['community_id'],
             coordinator_id=data['coordinator_id']
@@ -119,18 +127,18 @@ class EventDetails(Resource):
         user_emails = [user.email for user in active_users]
 
         # Create event in Google Calendar
-        start_datetime = datetime.datetime.combine(event_date, start_time).isoformat()
-        end_datetime = datetime.datetime.combine(event_date, end_time).isoformat()
+        start_datetime_iso = start_datetime.isoformat()
+        end_datetime_iso = end_datetime.isoformat()
 
         event = {
             'summary': data['title'],
-            'description': data.get('description') + '\n\nZoom Link: ' + data.get('zoom_link'),  # Add the Zoom link to the description
+            'description': data.get('description') + '\n\nZoom Link: ' + data.get('zoom_link'),
             'start': {
-                'dateTime': start_datetime,
+                'dateTime': start_datetime_iso,
                 'timeZone': 'UTC',
             },
             'end': {
-                'dateTime': end_datetime,
+                'dateTime': end_datetime_iso,
                 'timeZone': 'UTC',
             },
             'reminders': {
@@ -140,7 +148,7 @@ class EventDetails(Resource):
                     {'method': 'popup', 'minutes': 10},
                 ],
             },
-            'attendees': [{'email': email} for email in user_emails],  # Add attendees
+            'attendees': [{'email': email} for email in user_emails],
             'colorId': '6'
         }
 
@@ -152,9 +160,8 @@ class EventDetails(Resource):
 
         # Return only the time part for start_time and end_time
         result = event_schema.dump(new_event)
-        result['start_time'] = new_event.start_time.isoformat()
-        result['end_time'] = new_event.end_time.isoformat()
         return make_response(jsonify(result), 201)
+
 
 
 api.add_resource(EventDetails, '/events')
@@ -190,7 +197,7 @@ class EventById(Resource):
             "report": {
                 "id": report.id if report else None,
                 "title": report.title if report else None,
-                "description": report.description if report else None,
+                "overview": report.overview if report else None,
                 "user_name": f"{report_user.first_name} {report_user.last_name}" if report_user else None,
             } if report else None,
         }
@@ -198,12 +205,22 @@ class EventById(Resource):
         # print("Event fetched:", event_data)
         return make_response(jsonify(event_data), 200)
 
-    @admin_required()
+    
+
+   
+
+
+
+        
+    @jwt_required()
     def patch(self, id):
+        def parse_iso_format(date_str):
+            # This function assumes date_str is in ISO format
+            return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+
         data = patch_args.parse_args()
         event = Event.query.get(id)
         if not event:
-            print("Event not found")
             return make_response(jsonify({"error": "Event not found"}), 404)
 
         # Update event fields
@@ -212,35 +229,34 @@ class EventById(Resource):
         if data['description']:
             event.description = data['description']
         if data['event_date']:
-            event.event_date = datetime.datetime.strptime(data['event_date'], '%Y-%m-%d').date()
+            event.event_date = datetime.strptime(data['event_date'], '%Y-%m-%d').date()
         if data['start_time']:
-            event.start_time = datetime.datetime.strptime(data['start_time'], '%H:%M:%S').time()
+            event.start_time = parse_iso_format(data['start_time'])
         if data['end_time']:
-            event.end_time = datetime.datetime.strptime(data['end_time'], '%H:%M:%S').time()
+            event.end_time = parse_iso_format(data['end_time'])
         if data['zoom_link']:
             event.zoom_link = data['zoom_link']
         if data['community_id']:
             event.community_id = data['community_id']
         if data['coordinator_id']:
             event.coordinator_id = data['coordinator_id']
-
         db.session.commit()
 
-        # Update Google Calendar event if the calendar_event_id exists
-        if event.calendar_event_id:
-            start_datetime = datetime.datetime.combine(event.event_date, event.start_time).isoformat()
-            end_datetime = datetime.datetime.combine(event.event_date, event.end_time).isoformat()
+        # Extract the viewer's time zone from the request
+        viewer_time_zone = request.headers.get('X-Viewer-Timezone', 'UTC')
 
+        # Update Google Calendar event using the times passed from the frontend
+        if event.calendar_event_id:
             calendar_event = {
                 'summary': event.title,
-                'description': event.description + '\n\nZoom Link: ' + event.zoom_link,  # Add the Zoom link to the description
+                'description': event.description + '\n\nZoom Link: ' + event.zoom_link,
                 'start': {
-                    'dateTime': start_datetime,
-                    'timeZone': 'UTC',
+                    'dateTime': event.start_time.isoformat(),
+                    'timeZone': viewer_time_zone,
                 },
                 'end': {
-                    'dateTime': end_datetime,
-                    'timeZone': 'UTC',
+                    'dateTime': event.end_time.isoformat(),
+                    'timeZone': viewer_time_zone,
                 },
                 'reminders': {
                     'useDefault': False,
@@ -252,31 +268,41 @@ class EventById(Resource):
                 'colorId': '6'
             }
 
-            updated_event = service.events().update(
-                calendarId='primary', eventId=event.calendar_event_id, body=calendar_event).execute()
+            try:
+                updated_event = service.events().update(
+                    calendarId='primary', eventId=event.calendar_event_id, body=calendar_event).execute()
+                print("Event updated:", updated_event)
 
-        # Fetch all users with active status from the database
-        active_users = User.query.filter_by(active_status=True).all()
-        user_emails = [user.email for user in active_users]
+                # Fetch all users with active status from the database
+                active_users = User.query.filter_by(active_status=True).all()
+                user_emails = [user.email for user in active_users]
 
-        # Add attendees to the updated event
-        updated_event['attendees'] = [{'email': email} for email in user_emails]
-        service.events().update(calendarId='primary', eventId=event.calendar_event_id, body=updated_event).execute()
+                # Add attendees to the updated event
+                updated_event['attendees'] = [{'email': email} for email in user_emails]
+                updated_event = service.events().update(
+                    calendarId='primary', eventId=event.calendar_event_id, body=updated_event).execute()
+                print("Event updated with attendees:", updated_event)
 
-        # Return all attributes of the event
+            except Exception as e:
+                print("Error updating event:", str(e))
+                return make_response(jsonify({"error": "Failed to update Google Calendar event"}), 500)
+
+        # Return all attributes of the event in UTC
         result = {
             'id': event.id,
             'title': event.title,
             'description': event.description,
             'event_date': event.event_date.isoformat(),
-            'start_time': event.start_time.isoformat(),
-            'end_time': event.end_time.isoformat(),
+            'start_time': event.start_time.isoformat().replace('+00:00', 'Z'),
+            'end_time': event.end_time.isoformat().replace('+00:00', 'Z'),
             'zoom_link': event.zoom_link,
             'community_id': event.community_id,
             'coordinator_id': event.coordinator_id,
-            'calendar_event_id': event.calendar_event_id
+            'calendar_event_id': event.calendar_event_id,
+            'time_zone': 'UTC',
         }
         return make_response(jsonify(result), 200)
+
 
 
     @admin_required()

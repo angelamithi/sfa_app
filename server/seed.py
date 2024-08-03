@@ -212,8 +212,8 @@ def seed_database():
 
         # Seed data for Reports
         report_data = [
-            {"event_id": events[0].id, "num_attendees": 50, "overview": "The tech meetup had 50 attendees and discussed various programming languages.", "user_id": users[0].id},
-            {"event_id": events[1].id, "num_attendees": 30, "overview": "The health webinar had 30 attendees and focused on exercise routines.", "user_id": users[2].id}
+            {"event_id": events[0].id,"title":"event title 1", "num_attendees": 50, "overview": "The tech meetup had 50 attendees and discussed various programming languages.", "user_id": users[0].id},
+            {"event_id": events[1].id, "title":"event title 2" ,"num_attendees": 30, "overview": "The health webinar had 30 attendees and focused on exercise routines.", "user_id": users[2].id}
         ]
 
         reports = []

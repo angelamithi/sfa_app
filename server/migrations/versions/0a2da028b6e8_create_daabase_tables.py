@@ -1,8 +1,8 @@
-"""create databsae tables
+"""create daabase tables
 
-Revision ID: 3c94febecf59
+Revision ID: 0a2da028b6e8
 Revises: 
-Create Date: 2024-08-01 16:01:32.964750
+Create Date: 2024-08-03 14:58:12.860755
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '3c94febecf59'
+revision = '0a2da028b6e8'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -133,8 +133,9 @@ def upgrade():
     op.create_table('reports',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('event_id', sa.Integer(), nullable=False),
-    sa.Column('num_attendees', sa.Integer(), nullable=False),
+    sa.Column('title', sa.String(), nullable=False),
     sa.Column('overview', sa.Text(), nullable=False),
+    sa.Column('num_attendees', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['event_id'], ['events.id'], name=op.f('fk_reports_event_id_events')),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_reports_user_id_users')),

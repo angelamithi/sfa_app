@@ -42,6 +42,18 @@ const AddEvent = ({ events = [], setEvents }) => {
       });
   }, []);
 
+  // Helper function to ensure time has seconds
+  const ensureTimeWithSeconds = (time) => {
+    if (!time.includes(':')) {
+      return `${time}:00:00`;
+    }
+    const parts = time.split(':');
+    if (parts.length === 2) {
+      return `${time}:00`;
+    }
+    return time;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -49,8 +61,8 @@ const AddEvent = ({ events = [], setEvents }) => {
       title,
       description,
       event_date: eventDate,
-      start_time: startTime,
-      end_time: endTime,
+      start_time: ensureTimeWithSeconds(startTime),
+      end_time: ensureTimeWithSeconds(endTime),
       zoom_link: zoomLink,
       community_id: communityId,
       coordinator_id: coordinatorId
@@ -105,122 +117,52 @@ const AddEvent = ({ events = [], setEvents }) => {
       <h2 style={{ marginTop: "120px" }}>Add Event</h2>
       <div className="ui equal width form" style={{ marginTop: "60px" }}>
         <form onSubmit={handleSubmit}>
-          <div className="six wide field">
-            <label>
-              Event Title:
-              <input
-                type="text"
-                value={title}
-                onChange={handleInputChange(setTitle)}
-                required
-              />
-            </label>
+          <div className="field">
+            <label>Title:</label>
+            <input type="text" value={title} onChange={handleInputChange(setTitle)} required />
           </div>
-          <br />
-          <div className="six wide field">
-            <label>
-              Description:
-              <textarea
-                value={description}
-                onChange={handleInputChange(setDescription)}
-                required
-              />
-            </label>
+          <div className="field">
+            <label>Description:</label>
+            <input type="text" value={description} onChange={handleInputChange(setDescription)} required />
           </div>
-          <br />
-          <div className="six wide field">
-            <label>
-              Event Date:
-              <input
-                type="date"
-                value={eventDate}
-                onChange={handleInputChange(setEventDate)}
-                required
-              />
-            </label>
+          <div className="field">
+            <label>Event Date:</label>
+            <input type="date" value={eventDate} onChange={handleInputChange(setEventDate)} required />
           </div>
-          <br />
-          <div className="six wide field">
-            <label>
-              Start Time:
-              <input
-                type="time"
-                value={startTime}
-                onChange={handleInputChange(setStartTime)}
-                required
-              />
-            </label>
+          <div className="field">
+            <label>Start Time:</label>
+            <input type="time" value={startTime} onChange={handleInputChange(setStartTime)} required />
           </div>
-          <br />
-          <div className="six wide field">
-            <label>
-              End Time:
-              <input
-                type="time"
-                value={endTime}
-                onChange={handleInputChange(setEndTime)}
-                required
-              />
-            </label>
+          <div className="field">
+            <label>End Time:</label>
+            <input type="time" value={endTime} onChange={handleInputChange(setEndTime)} required />
           </div>
-          <br />
-          <div className="six wide field">
-            <label>
-              Zoom Link:
-              <input
-                type="url"
-                value={zoomLink}
-                onChange={handleInputChange(setZoomLink)}
-              />
-            </label>
+          <div className="field">
+            <label>Zoom Link:</label>
+            <input type="text" value={zoomLink} onChange={handleInputChange(setZoomLink)} />
           </div>
-          <br />
-          <div className="six wide field">
-            <label>
-              Community:
-              <select
-                value={communityId}
-                onChange={handleInputChange(setCommunityId)}
-                required
-              >
-                <option value="">Select Community</option>
-                {communities.map((community) => (
-                  <option key={community.id} value={community.id}>
-                    {community.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <div className="field">
+            <label>Community:</label>
+            <select value={communityId} onChange={handleInputChange(setCommunityId)} required>
+              <option value="">Select Community</option>
+              {communities.map((community) => (
+                <option key={community.id} value={community.id}>{community.name}</option>
+              ))}
+            </select>
           </div>
-          <br />
-          <div className="six wide field">
-            <label>
-              Coordinator:
-              <select
-                value={coordinatorId}
-                onChange={handleInputChange(setCoordinatorId)}
-                required
-              >
-                <option value="">Select Coordinator</option>
-                {coordinators.map((coordinator) => (
-                  <option key={coordinator.id} value={coordinator.id}>
-                    {coordinator.first_name} {coordinator.last_name}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <div className="field">
+            <label>Coordinator:</label>
+            <select value={coordinatorId} onChange={handleInputChange(setCoordinatorId)} required>
+              <option value="">Select Coordinator</option>
+              {coordinators.map((coordinator) => (
+                <option key={coordinator.id} value={coordinator.id}>{coordinator.full_name}</option>
+              ))}
+            </select>
           </div>
-          <br />
-          <button
-            type="submit"
-            className='ui teal button'
-            style={{ width: "200px", marginLeft: "110px", marginTop: "20px" }}
-          >
-            Add Event
-          </button>
+          <button className="ui button" type="submit">Submit</button>
         </form>
-        {message && <div className="ui positive message" style={{ marginTop: "20px" }}>{message}</div>}
-        {error && <div className="ui negative message" style={{ marginTop: "20px" }}>{error}</div>}
+        {error && <div className="ui red message">{error}</div>}
+        {message && <div className="ui green message">{message}</div>}
       </div>
     </div>
   );

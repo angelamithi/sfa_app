@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { retrieve } from './Encryption';
+import { format as formatZonedTime, toZonedTime } from 'date-fns-tz';
+import { parseISO, formatISO } from 'date-fns';
+import { retrieve } from './Encryption'; // Adjust the import path as needed
 import { useParams, useNavigate } from 'react-router-dom';
 
 const EditEvent = () => {
@@ -19,7 +21,20 @@ const EditEvent = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Fetch the event details by ID
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const viewerTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  const convertUTCToLocal = (utcDateTime) => {
+    const utcDate = parseISO(utcDateTime);
+    const zonedDate = toZonedTime(utcDate, timeZone);
+    return formatZonedTime(zonedDate, 'HH:mm:ss', { timeZone });
+  };
+
+  const convertToUTC = (date, time) => {
+    const localDateTime = new Date(`${date}T${time}`);
+    return formatISO(localDateTime, { representation: 'complete' });
+  };
+
   useEffect(() => {
     fetch(`/events/${id}`, {
       headers: {
@@ -37,9 +52,9 @@ const EditEvent = () => {
         setEvent(data);
         setTitle(data.title);
         setDescription(data.description);
-        setEventDate(data.event_date);
-        setStartTime(data.start_time);
-        setEndTime(data.end_time);
+        setEventDate(data.event_date.substring(0, 10)); // Remove the time part
+        setStartTime(convertUTCToLocal(data.start_time));
+        setEndTime(convertUTCToLocal(data.end_time));
         setZoomLink(data.zoom_link);
         setCommunityId(data.community_id);
         setCoordinatorId(data.coordinator_id);
@@ -50,7 +65,6 @@ const EditEvent = () => {
       });
   }, [id]);
 
-  // Fetch the list of communities
   useEffect(() => {
     fetch('/communities', {
       headers: {
@@ -73,9 +87,8 @@ const EditEvent = () => {
       });
   }, []);
 
-  // Fetch the list of coordinators
   useEffect(() => {
-    fetch('/coordinators', { // Update this endpoint if needed
+    fetch('/fetch_coordinators', {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + retrieve().access_token,
@@ -100,12 +113,15 @@ const EditEvent = () => {
     e.preventDefault();
     setError(''); // Clear previous error message
 
+    const startTimeUTC = convertToUTC(eventDate, startTime);
+    const endTimeUTC = convertToUTC(eventDate, endTime);
+
     const updatedEvent = {
       title,
       description,
       event_date: eventDate,
-      start_time: startTime,
-      end_time: endTime,
+      start_time: startTimeUTC,
+      end_time: endTimeUTC,
       zoom_link: zoomLink,
       community_id: communityId,
       coordinator_id: coordinatorId,
@@ -116,25 +132,22 @@ const EditEvent = () => {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + retrieve().access_token,
+        'X-Viewer-Timezone': viewerTimeZone
       },
       body: JSON.stringify(updatedEvent),
     })
       .then((resp) => {
         if (!resp.ok) {
-          return resp.json().then((err) => {
-            setError(err.error || 'Failed to update event. Please try again.');
-            setMessage(''); // Clear previous success message
-            throw new Error(err.error || 'Failed to update event. Please try again.');
-          });
+          throw new Error('Failed to update event');
         }
         return resp.json();
       })
-      .then((updatedData) => {
-        console.log('Updated Event:', updatedData);
-        setMessage('Event details have been updated successfully!');
+      .then((data) => {
+        console.log('Event updated:', data);
+        setMessage('Event updated successfully!');
         setTimeout(() => {
-          navigate('/manage_events'); // Redirect to Manage Events after a few seconds
-        }, 3000); // Wait for 3 seconds before redirecting
+          navigate('/manage_events');
+        }, 2000);
       })
       .catch((error) => {
         console.error('Error updating event:', error);
@@ -142,66 +155,70 @@ const EditEvent = () => {
       });
   };
 
-  // Reset error message when the user starts typing again
-  const handleInputChange = (setter) => (e) => {
-    setter(e.target.value);
-    if (error) setError(''); // Clear error when user starts fixing it
-  };
-
   return (
-    <div className="content-wrapper" style={{ marginLeft: '280px', backgroundColor: 'white', marginTop: '20px' }}>
-      <h2>Edit Event</h2>
-      {error && <div className="error-message">{error}</div>}
-      {message && <div className="success-message">{message}</div>}
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="title">Title</label>
-          <input type="text" id="title" value={title} onChange={handleInputChange(setTitle)} required />
-        </div>
-        <div className="form-group">
-          <label htmlFor="description">Description</label>
-          <textarea id="description" value={description} onChange={handleInputChange(setDescription)} required></textarea>
-        </div>
-        <div className="form-group">
-          <label htmlFor="eventDate">Event Date</label>
-          <input type="date" id="eventDate" value={eventDate} onChange={handleInputChange(setEventDate)} required />
-        </div>
-        <div className="form-group">
-          <label htmlFor="startTime">Start Time</label>
-          <input type="time" id="startTime" value={startTime} onChange={handleInputChange(setStartTime)} required />
-        </div>
-        <div className="form-group">
-          <label htmlFor="endTime">End Time</label>
-          <input type="time" id="endTime" value={endTime} onChange={handleInputChange(setEndTime)} required />
-        </div>
-        <div className="form-group">
-          <label htmlFor="zoomLink">Zoom Link</label>
-          <input type="url" id="zoomLink" value={zoomLink} onChange={handleInputChange(setZoomLink)} required />
-        </div>
-        <div className="form-group">
-          <label htmlFor="communityId">Community</label>
-          <select id="communityId" value={communityId} onChange={handleInputChange(setCommunityId)} required>
-            <option value="">Select Community</option>
-            {communityList.map((community) => (
-              <option key={community.id} value={community.id}>
-                {community.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-group">
-          <label htmlFor="coordinatorId">Coordinator</label>
-          <select id="coordinatorId" value={coordinatorId} onChange={handleInputChange(setCoordinatorId)} required>
-            <option value="">Select Coordinator</option>
-            {coordinatorList.map((coordinator) => (
-              <option key={coordinator.id} value={coordinator.id}>
-                {coordinator.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <button type="submit">Save Changes</button>
-      </form>
+    <div>
+      <h1>Edit Event</h1>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {message && <p style={{ color: 'green' }}>{message}</p>}
+      {event && (
+        <form onSubmit={handleSubmit}>
+          <label>
+            Title:
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required />
+          </label>
+          <br />
+          <label>
+            Description:
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)}></textarea>
+          </label>
+          <br />
+          <label>
+            Event Date:
+            <input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} required />
+          </label>
+          <br />
+          <label>
+            Start Time (UTC):
+            <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} required />
+          </label>
+          <br />
+          <label>
+            End Time (UTC):
+            <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} required />
+          </label>
+          <br />
+          <label>
+            Zoom Link:
+            <input type="url" value={zoomLink} onChange={(e) => setZoomLink(e.target.value)} />
+          </label>
+          <br />
+          <label>
+            Community:
+            <select value={communityId} onChange={(e) => setCommunityId(e.target.value)} required>
+              <option value="">Select Community</option>
+              {communityList.map((community) => (
+                <option key={community.id} value={community.id}>
+                  {community.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <br />
+          <label>
+            Coordinator:
+            <select value={coordinatorId} onChange={(e) => setCoordinatorId(e.target.value)} required>
+              <option value="">Select Coordinator</option>
+              {coordinatorList.map((coordinator) => (
+                <option key={coordinator.id} value={coordinator.id}>
+                  {coordinator.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <br />
+          <button type="submit">Save Changes</button>
+        </form>
+      )}
     </div>
   );
 };

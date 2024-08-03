@@ -139,8 +139,9 @@ class Report(db.Model):
     __tablename__ = "reports"
     id = db.Column(db.Integer, primary_key=True)
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
-    num_attendees = db.Column(db.Integer, nullable=False)
+    title=db.Column(db.String,nullable=False)
     overview = db.Column(db.Text, nullable=False)
+    num_attendees = db.Column(db.Integer, nullable=False)
     user_id=db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
 class VolunteerHour(db.Model):
