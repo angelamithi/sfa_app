@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { retrieve } from './Encryption'; // Adjust the import based on your file structure
+import { format as formatZonedTime, toZonedTime } from 'date-fns-tz';
+import { parseISO, formatISO } from 'date-fns';
+import { retrieve } from './Encryption'; // Adjust the import path as needed
 import { useNavigate } from 'react-router-dom';
 
-const AddEvent = ({ events = [], setEvents }) => {
+const AddEvent = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [eventDate, setEventDate] = useState('');
@@ -10,31 +12,52 @@ const AddEvent = ({ events = [], setEvents }) => {
   const [endTime, setEndTime] = useState('');
   const [zoomLink, setZoomLink] = useState('');
   const [communityId, setCommunityId] = useState('');
-  const [communities, setCommunities] = useState([]);
+  const [communityList, setCommunityList] = useState([]);
   const [coordinatorId, setCoordinatorId] = useState('');
-  const [coordinators, setCoordinators] = useState([]);
-  const [showForm, setShowForm] = useState(true);
+  const [coordinatorList, setCoordinatorList] = useState([]);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [events, setEvents] = useState([]); // Initialize local state for events
+  const [showForm, setShowForm] = useState(true);
   const navigate = useNavigate();
+  
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const viewerTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  const convertUTCToLocal = (utcDateTime) => {
+    const utcDate = parseISO(utcDateTime);
+    const zonedDate = toZonedTime(utcDate, timeZone);
+    return formatZonedTime(zonedDate, 'HH:mm:ss', { timeZone });
+  };
+
+  const convertToUTC = (date, time) => {
+    const localDateTime = new Date(`${date}T${time}`);
+    return formatISO(localDateTime, { representation: 'complete' });
+  };
 
   useEffect(() => {
-    // Fetch communities data from the backend
-    fetch('/communities', { headers: { 'Authorization': 'Bearer ' + retrieve().access_token } })
+    fetch('/communities', {
+      headers: {
+        'Authorization': 'Bearer ' + retrieve().access_token
+      }
+    })
       .then(response => response.json())
-      .then((communityData) => {
-        setCommunities(communityData);
+      .then((data) => {
+        setCommunityList(data);
       })
       .catch(error => {
         console.error('Error fetching communities:', error);
         setError('Error fetching communities.');
       });
 
-    // Fetch coordinators data from the backend
-    fetch('/users?role=coordinator', { headers: { 'Authorization': 'Bearer ' + retrieve().access_token } })
+    fetch('/fetch_coordinators', {
+      headers: {
+        'Authorization': 'Bearer ' + retrieve().access_token
+      }
+    })
       .then(response => response.json())
-      .then((coordinatorData) => {
-        setCoordinators(coordinatorData);
+      .then((data) => {
+        setCoordinatorList(data);
       })
       .catch(error => {
         console.error('Error fetching coordinators:', error);
@@ -42,27 +65,25 @@ const AddEvent = ({ events = [], setEvents }) => {
       });
   }, []);
 
-  // Helper function to ensure time has seconds
-  const ensureTimeWithSeconds = (time) => {
-    if (!time.includes(':')) {
-      return `${time}:00:00`;
-    }
-    const parts = time.split(':');
-    if (parts.length === 2) {
-      return `${time}:00`;
-    }
-    return time;
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    console.log('Original Start Time:', startTime);
+    console.log('Original End Time:', endTime);
+
+    const startTimeUTC = convertToUTC(eventDate, startTime);
+    const endTimeUTC = convertToUTC(eventDate, endTime);
+    
+
+    console.log('Converted Start Time (UTC):', startTimeUTC);
+    console.log('Converted End Time (UTC):', endTimeUTC);
 
     const newEvent = {
       title,
       description,
       event_date: eventDate,
-      start_time: ensureTimeWithSeconds(startTime),
-      end_time: ensureTimeWithSeconds(endTime),
+      start_time: startTimeUTC,
+      end_time: endTimeUTC,
       zoom_link: zoomLink,
       community_id: communityId,
       coordinator_id: coordinatorId
@@ -73,6 +94,7 @@ const AddEvent = ({ events = [], setEvents }) => {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + retrieve().access_token,
+        'X-Viewer-Timezone': viewerTimeZone
       },
       body: JSON.stringify(newEvent),
     })
@@ -80,23 +102,30 @@ const AddEvent = ({ events = [], setEvents }) => {
         if (!resp.ok) {
           return resp.json().then(err => {
             setError(err.error || 'Error adding event. Please try again.');
-            setMessage(''); // Clear previous success message
+            setMessage('');
             throw new Error(err.error || 'Error adding event. Please try again.');
           });
         }
         return resp.json();
       })
       .then((data) => {
-        console.log('Added Event:', data);
-        if (setEvents) {
-          setEvents([...events, data]);
-        }
-        setError(''); // Clear any previous error
+        console.log('Event Data (UTC):', data);
+
+        const updatedData = {
+          ...data,
+          start_time: convertUTCToLocal(data.start_time),
+          end_time: convertUTCToLocal(data.end_time),
+        };
+
+        console.log('Event Data (Local):', updatedData);
+
+        setEvents(prevEvents => [...prevEvents, updatedData]); // Update local events state
+        setError('');
         setMessage('Event has been successfully created');
         setTimeout(() => {
           setShowForm(false);
           navigate('/manage_events');
-        }, 3000); // Display message for 3 seconds before navigating
+        }, 3000);
       })
       .catch((error) => {
         console.error('Error adding event:', error);
@@ -105,7 +134,7 @@ const AddEvent = ({ events = [], setEvents }) => {
 
   const handleInputChange = (setter) => (e) => {
     setter(e.target.value);
-    if (error) setError(''); // Clear error when user starts fixing it
+    if (error) setError('');
   };
 
   if (!showForm) {
@@ -145,7 +174,7 @@ const AddEvent = ({ events = [], setEvents }) => {
             <label>Community:</label>
             <select value={communityId} onChange={handleInputChange(setCommunityId)} required>
               <option value="">Select Community</option>
-              {communities.map((community) => (
+              {communityList.map((community) => (
                 <option key={community.id} value={community.id}>{community.name}</option>
               ))}
             </select>
@@ -154,8 +183,8 @@ const AddEvent = ({ events = [], setEvents }) => {
             <label>Coordinator:</label>
             <select value={coordinatorId} onChange={handleInputChange(setCoordinatorId)} required>
               <option value="">Select Coordinator</option>
-              {coordinators.map((coordinator) => (
-                <option key={coordinator.id} value={coordinator.id}>{coordinator.full_name}</option>
+              {coordinatorList.map((coordinator) => (
+                <option key={coordinator.id} value={coordinator.id}>{coordinator.name}</option>
               ))}
             </select>
           </div>

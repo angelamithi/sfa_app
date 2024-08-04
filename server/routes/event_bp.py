@@ -9,7 +9,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 import os
-from datetime import datetime, time,date
+from datetime import datetime, time,date,timezone
 import pytz
 from dateutil import parser
 
@@ -95,26 +95,27 @@ class EventDetails(Resource):
 
   
 
+    
+
+
     @jwt_required()
     def post(self):
-        data = post_args.parse_args()
+        #Parse the request data
+        def parse_iso_format(date_str):
+            # This function assumes date_str is in ISO format
+            return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+        
+        data = post_args.parse_args()  
 
-        # Convert string date and time to datetime objects
-        event_date = datetime.strptime(data['event_date'], '%Y-%m-%d').date()
-        start_time = datetime.strptime(data['start_time'], '%H:%M:%S').time()
-        end_time = datetime.strptime(data['end_time'], '%H:%M:%S').time()
-
-        # Combine date with time to create datetime objects
-        start_datetime = datetime.combine(event_date, start_time)
-        end_datetime = datetime.combine(event_date, end_time)
-
+     
+        
         # Create event in the database
         new_event = Event(
             title=data['title'],
             description=data.get('description'),
-            event_date=event_date,
-            start_time=start_datetime,  # Store as datetime
-            end_time=end_datetime,  # Store as datetime
+            event_date=datetime.strptime(data['event_date'], '%Y-%m-%d').date(),
+            start_time=parse_iso_format(data['start_time']),  # Store as UTC datetime
+            end_time=parse_iso_format(data['end_time']),      # Store as UTC datetime
             zoom_link=data.get('zoom_link'),
             community_id=data['community_id'],
             coordinator_id=data['coordinator_id']
@@ -127,19 +128,22 @@ class EventDetails(Resource):
         user_emails = [user.email for user in active_users]
 
         # Create event in Google Calendar
-        start_datetime_iso = start_datetime.isoformat()
-        end_datetime_iso = end_datetime.isoformat()
+        start_datetime_iso = new_event.start_time.isoformat()
+        end_datetime_iso = new_event.end_time.isoformat()
+        # Extract the viewer's time zone from the request
+        viewer_time_zone = request.headers.get('X-Viewer-Timezone', 'UTC')
 
         event = {
             'summary': data['title'],
             'description': data.get('description') + '\n\nZoom Link: ' + data.get('zoom_link'),
             'start': {
                 'dateTime': start_datetime_iso,
-                'timeZone': 'UTC',
+                'timeZone':viewer_time_zone ,
+                
             },
             'end': {
                 'dateTime': end_datetime_iso,
-                'timeZone': 'UTC',
+                'timeZone': viewer_time_zone,
             },
             'reminders': {
                 'useDefault': False,
@@ -160,8 +164,8 @@ class EventDetails(Resource):
 
         # Return only the time part for start_time and end_time
         result = event_schema.dump(new_event)
+        print(result)
         return make_response(jsonify(result), 201)
-
 
 
 api.add_resource(EventDetails, '/events')
@@ -301,6 +305,7 @@ class EventById(Resource):
             'calendar_event_id': event.calendar_event_id,
             'time_zone': 'UTC',
         }
+        print(result)
         return make_response(jsonify(result), 200)
 
 

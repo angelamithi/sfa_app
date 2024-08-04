@@ -34,6 +34,7 @@ const EditEvent = () => {
     const localDateTime = new Date(`${date}T${time}`);
     return formatISO(localDateTime, { representation: 'complete' });
   };
+  
 
   useEffect(() => {
     fetch(`/events/${id}`, {
@@ -112,9 +113,13 @@ const EditEvent = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     setError(''); // Clear previous error message
+    console.log('Original Start Time:', startTime);
+    console.log('Original End Time:', endTime);
 
     const startTimeUTC = convertToUTC(eventDate, startTime);
     const endTimeUTC = convertToUTC(eventDate, endTime);
+    console.log('Converted Start Time (UTC):', startTimeUTC);
+    console.log('Converted End Time (UTC):', endTimeUTC)
 
     const updatedEvent = {
       title,
