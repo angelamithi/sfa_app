@@ -1,9 +1,10 @@
 from flask import Blueprint, make_response, jsonify
 from flask_restful import Api, Resource, reqparse
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required,get_jwt
 from models import Survey, db,User,SurveyResponse
 from serializer import survey_schema,survey_response_schema
 from auth import admin_required
+from datetime import datetime
 
 survey_bp = Blueprint('survey_bp', __name__)
 api = Api(survey_bp)
@@ -12,6 +13,9 @@ post_args = reqparse.RequestParser()
 post_args.add_argument('title', type=str, required=True, help='Title is required')
 post_args.add_argument('questions', type=dict, required=True, help='Questions are required')
 post_args.add_argument('survey_owner_id', type=int, required=True, help='Survey Owner ID is required')
+post_args.add_argument('survey_start_date', type=str, required=True, help='Survey Start Date is required')
+post_args.add_argument('survey_stop_date', type=str, required=True, help='Survey Stop Date is required')
+
 
 patch_args = reqparse.RequestParser()
 patch_args.add_argument('title', type=str)
@@ -38,14 +42,29 @@ class SurveyDetails(Resource):
         return make_response(jsonify(result), 200)
 
 
-    @admin_required()
+    @jwt_required()
     def post(self):
         data = post_args.parse_args()
+        jwt_payload=get_jwt()
+        survey_owner_id = jwt_payload.get('user_id')  
+        print(survey_owner_id)
+        # Convert date strings to datetime.date objects
+        if 'survey_start_date' in data and data['survey_start_date']:
+            survey_start_date = datetime.strptime(data['survey_start_date'], '%Y-%m-%d').date()
+        else:
+            survey_start_date = None
+
+        if 'survey_stop_date' in data and data['survey_stop_date']:
+            survey_stop_date = datetime.strptime(data['survey_stop_date'], '%Y-%m-%d').date()
+        else:
+            survey_stop_date = None
 
         new_survey = Survey(
             title=data['title'],
             questions=data['questions'],
-            survey_owner_id=data['survey_owner_id']
+            survey_owner_id=survey_owner_id,
+            survey_start_date= survey_start_date,
+            survey_stop_date= survey_stop_date
         )
         db.session.add(new_survey)
         db.session.commit()
@@ -98,6 +117,7 @@ class SurveyById(Resource):
         survey = Survey.query.get(id)
         if not survey:
             return make_response(jsonify({"error": "Survey not found"}), 404)
+        SurveyResponse.query.filter_by(survey_id=id).delete()
 
         db.session.delete(survey)
         db.session.commit()

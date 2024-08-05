@@ -237,14 +237,14 @@ const AdminSidebar = () => {
 
             <Item
               title="Manage Polls"
-              to="/manage_community"
+              to="/manage_polls"
               icon={<PersonOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
             <Item
               title="Manage Surveys"
-              to="/manage_community"
+              to="/manage_surveys"
               icon={<PersonOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}

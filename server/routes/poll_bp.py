@@ -1,6 +1,6 @@
 from flask import Blueprint, make_response, jsonify
 from flask_restful import Api, Resource, reqparse
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required,get_jwt
 from models import Poll, db,Event,User,PollResponse
 from serializer import poll_schema,poll_response_schema
 from auth import admin_required
@@ -12,7 +12,9 @@ post_args = reqparse.RequestParser()
 post_args.add_argument('question', type=str, required=True, help='Question is required')
 post_args.add_argument('options', type=dict, required=True, help='Options are required')
 post_args.add_argument('event_id', type=int, required=True, help='Event ID is required')
-post_args.add_argument('poll_owner_id', type=int, required=True, help='Poll Owner ID is required')
+post_args.add_argument('poll_start_date', type=str, required=True, help='Poll Start Date is required')
+post_args.add_argument('poll_stop_date', type=str, required=True, help='Poll Stop Date is required')
+
 
 patch_args = reqparse.RequestParser()
 patch_args.add_argument('question', type=str)
@@ -48,15 +50,31 @@ class PollDetails(Resource):
         return make_response(jsonify(poll_details), 200)
 
 
-
+    @jwt_required()
     def post(self):
         data = post_args.parse_args()
+        jwt_payload=get_jwt()
+        poll_owner_id = jwt_payload.get('user_id')  
+        print(poll_owner_id)
+        # Convert date strings to datetime.date objects
+        if 'poll_start_date' in data and data['poll_start_date']:
+            poll_start_date = datetime.strptime(data['poll_start_date'], '%Y-%m-%d').date()
+        else:
+            poll_start_date = None
+
+        if 'poll_stop_date' in data and data['poll_stop_date']:
+            poll_stop_date = datetime.strptime(data['poll_stop_date'], '%Y-%m-%d').date()
+        else:
+            poll_stop_date = None
 
         new_poll = Poll(
             question=data['question'],
             options=data['options'],
             event_id=data['event_id'],
-            poll_owner_id=data['poll_owner_id']
+            poll_owner_id=poll_owner_id,
+            poll_start_date= poll_start_date,
+            poll_stop_date= poll_stop_date
+                    
         )
         db.session.add(new_poll)
         db.session.commit()
@@ -118,13 +136,20 @@ class PollById(Resource):
 
     @admin_required()
     def delete(self, id):
+        # Fetch the poll
         poll = Poll.query.get(id)
         if not poll:
             return make_response(jsonify({"error": "Poll not found"}), 404)
 
+        # Delete all associated PollResponse entries
+        PollResponse.query.filter_by(poll_id=id).delete()
+
+        # Now delete the Poll
         db.session.delete(poll)
         db.session.commit()
+
         return make_response(jsonify({"message": "Poll deleted successfully"}), 200)
+
 
     @admin_required()
     def patch(self, id):

@@ -56,6 +56,11 @@ import AddSession from "./components/AddSession";
 import EditSession from "./components/EditSession";
 import ManageEvents from "./components/ManageEvents";
 import EditEvent from "./components/EditEvent";
+import ManagePolls from "./components/ManagePolls";
+import EditPoll from "./components/EditPoll";
+import AddPoll from "./components/AddPoll";
+import ManageSurveys from "./components/ManageSurveys";
+import AddSurvey from "./components/AddSurvey";
 function App() {
   const [theme, colorMode] = useMode();
   const [isSidebar, setIsSidebar] = useState(true);
@@ -138,6 +143,12 @@ function App() {
                   <Route path="/manage_events" element={<ManageEvents/>} />
                   <Route path="/add_event" element={<AddEvent/>} />
                   <Route path="/edit_event/:id" element={<EditEvent/>} />
+                  <Route path="/manage_polls" element={<ManagePolls/>} />
+                  <Route path="/edit_poll/:id" element={<EditPoll/>} />
+                  <Route path="/add_poll" element={<AddPoll/>} />
+                  <Route path="/manage_surveys" element={<ManageSurveys/>} />
+                  <Route path="/add_survey" element={<AddSurvey/>} />
+
 
 
         
