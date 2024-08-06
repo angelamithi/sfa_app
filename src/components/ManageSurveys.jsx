@@ -4,6 +4,7 @@ import { retrieve } from './Encryption'; // Assuming you have a retrieve functio
 
 const ManageSurveys = () => {
   const [surveysDetails, setSurveysDetails] = useState([]);
+  const [currentUserId, setCurrentUserId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,6 +17,10 @@ const ManageSurveys = () => {
       .then(data => {
         if (Array.isArray(data)) {
           setSurveysDetails(data);
+          if (data.length > 0) {
+            // Assume the first item's current_user_id is consistent across all items
+            setCurrentUserId(data[0].current_user_id);
+          }
         } else {
           setSurveysDetails([]);
           console.error('Error: data is not an array', data);
@@ -97,8 +102,12 @@ const ManageSurveys = () => {
                 <td onClick={() => handleRowClick(survey.id)}>{formatDate(survey.survey_start_date)}</td>
                 <td onClick={() => handleRowClick(survey.id)}>{formatDate(survey.survey_stop_date)}</td>
                 <td>
-                  <button onClick={() => handleEditClick(survey.id)}>Edit</button>
-                  <button onClick={() => handleDeleteClick(survey.id)} style={{ marginLeft: '10px', color: 'red' }}>Delete</button>
+                  {currentUserId === survey.survey_owner_id && (
+                    <>
+                      <button onClick={() => handleEditClick(survey.id)}>Edit</button>
+                      <button onClick={() => handleDeleteClick(survey.id)} style={{ marginLeft: '10px', color: 'red' }}>Delete</button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}

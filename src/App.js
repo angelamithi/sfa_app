@@ -61,6 +61,7 @@ import EditPoll from "./components/EditPoll";
 import AddPoll from "./components/AddPoll";
 import ManageSurveys from "./components/ManageSurveys";
 import AddSurvey from "./components/AddSurvey";
+import EditSurvey from "./components/EditSurvey";
 function App() {
   const [theme, colorMode] = useMode();
   const [isSidebar, setIsSidebar] = useState(true);
@@ -148,6 +149,7 @@ function App() {
                   <Route path="/add_poll" element={<AddPoll/>} />
                   <Route path="/manage_surveys" element={<ManageSurveys/>} />
                   <Route path="/add_survey" element={<AddSurvey/>} />
+                  <Route path="/edit_survey/:id" element={<EditSurvey/>} />
 
 
 

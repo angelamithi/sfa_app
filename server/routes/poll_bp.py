@@ -20,11 +20,16 @@ patch_args = reqparse.RequestParser()
 patch_args.add_argument('question', type=str)
 patch_args.add_argument('options', type=dict)
 patch_args.add_argument('event_id', type=int)
-patch_args.add_argument('poll_owner_id', type=int)
+patch_args.add_argument('poll_start_date', type=str)
+patch_args.add_argument('poll_stop_date', type=str)
+
+from flask_jwt_extended import get_jwt_identity
 
 class PollDetails(Resource):
     @jwt_required()
     def get(self):
+        current_user_id = get_jwt_identity()  # Extract the current user's ID from the JWT token
+
         polls = Poll.query.all()
         poll_details = []
 
@@ -41,13 +46,21 @@ class PollDetails(Resource):
                 'question': poll.question,
                 'event_name': event.title if event else None,
                 'poll_owner_name': f"{poll_owner.first_name} {poll_owner.last_name}" if poll_owner else None,
+                'poll_owner_id': poll.poll_owner_id,  # Include the poll owner ID
                 'poll_start_date': poll_start_date,
-                'poll_stop_date': poll_stop_date
+                'poll_stop_date': poll_stop_date,
             }
 
             poll_details.append(detail)
 
-        return make_response(jsonify(poll_details), 200)
+        response = {
+            'polls': poll_details,
+            'current_user_id': current_user_id,  # Include the current user ID in the response
+        }
+
+        return make_response(jsonify(response), 200)
+
+
 
 
     @jwt_required()
@@ -134,7 +147,7 @@ class PollById(Resource):
 
 
 
-    @admin_required()
+    @jwt_required()
     def delete(self, id):
         # Fetch the poll
         poll = Poll.query.get(id)
@@ -151,7 +164,7 @@ class PollById(Resource):
         return make_response(jsonify({"message": "Poll deleted successfully"}), 200)
 
 
-    @admin_required()
+    @jwt_required()
     def patch(self, id):
         poll = Poll.query.get(id)
         if not poll:

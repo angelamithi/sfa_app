@@ -4,6 +4,7 @@ import { retrieve } from './Encryption'; // Assuming you have a retrieve functio
 
 const ManagePolls = () => {
   const [pollsDetails, setPollsDetails] = useState([]);
+  const [currentUserId, setCurrentUserId] = useState(null); // State to hold the current user ID
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,8 +15,9 @@ const ManagePolls = () => {
     })
       .then(response => response.json())
       .then(data => {
-        if (Array.isArray(data)) {
-          setPollsDetails(data);
+        if (Array.isArray(data.polls)) {
+          setPollsDetails(data.polls);
+          setCurrentUserId(data.current_user_id); // Set the current user ID from the response
         } else {
           setPollsDetails([]);
           console.error('Error: data is not an array', data);
@@ -99,8 +101,12 @@ const ManagePolls = () => {
                 <td onClick={() => handleRowClick(poll.id)}>{formatDate(poll.poll_start_date)}</td>
                 <td onClick={() => handleRowClick(poll.id)}>{formatDate(poll.poll_stop_date)}</td>
                 <td>
-                  <button onClick={() => handleEditClick(poll.id)}>Edit</button>
-                  <button onClick={() => handleDeleteClick(poll.id)} style={{ marginLeft: '10px', color: 'red' }}>Delete</button>
+                  {currentUserId === poll.poll_owner_id && (  // Check if current user is the poll owner
+                    <>
+                      <button onClick={() => handleEditClick(poll.id)}>Edit</button>
+                      <button onClick={() => handleDeleteClick(poll.id)} style={{ marginLeft: '10px', color: 'red' }}>Delete</button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}
