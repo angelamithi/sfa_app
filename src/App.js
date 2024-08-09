@@ -62,6 +62,9 @@ import AddPoll from "./components/AddPoll";
 import ManageSurveys from "./components/ManageSurveys";
 import AddSurvey from "./components/AddSurvey";
 import EditSurvey from "./components/EditSurvey";
+import TranscriptInteraction from "./components/TranscriptInteraction";
+import FetchTranscriptsByDate from "./components/FetchTranscriptsByDate";
+import FetchTranscriptsByEvent from "./components/FetchTranscriptsByEvent";
 function App() {
   const [theme, colorMode] = useMode();
   const [isSidebar, setIsSidebar] = useState(true);
@@ -150,6 +153,9 @@ function App() {
                   <Route path="/manage_surveys" element={<ManageSurveys/>} />
                   <Route path="/add_survey" element={<AddSurvey/>} />
                   <Route path="/edit_survey/:id" element={<EditSurvey/>} />
+                  <Route path="/fetch_transcripts_event" element={<FetchTranscriptsByEvent/>} />
+                  <Route path="/fetch_transcripts_date" element={<FetchTranscriptsByDate/>} />
+                  <Route path="/transcription_interaction" element={<TranscriptInteraction/>} />
 
 
 

@@ -30,7 +30,8 @@ from routes.sessions_bp import sessions_bp
 from routes.year_bp import years_bp
 from flask_mail import Mail
 from routes.calendar_bp import calendar_bp
-
+from routes.zoom_bp import zoom_bp
+from routes.fileSearch_bp import fileSearch_bp
 # Initialize Flask components
 bcrypt = Bcrypt()
 mail = Mail()
@@ -87,6 +88,8 @@ def create_app():
     app.register_blueprint(sessions_bp)
     app.register_blueprint(years_bp)
     app.register_blueprint(calendar_bp)
+    app.register_blueprint(zoom_bp)
+    app.register_blueprint(fileSearch_bp)
 
 
 
